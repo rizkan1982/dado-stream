@@ -1,11 +1,99 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import axios from 'axios';
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 // API endpoints
 const API_BASE = 'https://api.sansekai.my.id/api';
 const ANIME_API = 'https://www.sankavollerei.com/anime/samehadaku';
 const KOMIK_API = 'https://api-manga-five.vercel.app';
 const KOMIK_PROVIDER = 'shinigami';
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'dado-stream-secret-key-2024';
+const MONGODB_URI = process.env.MONGODB_URI || '';
+
+// MongoDB Connection (cached for serverless)
+let cachedDb: typeof mongoose | null = null;
+
+async function connectDB() {
+    if (cachedDb && mongoose.connection.readyState === 1) {
+        return cachedDb;
+    }
+    
+    if (!MONGODB_URI) {
+        console.log('MongoDB URI not configured, using fallback mode');
+        return null;
+    }
+
+    try {
+        cachedDb = await mongoose.connect(MONGODB_URI);
+        console.log('MongoDB connected');
+        return cachedDb;
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+        return null;
+    }
+}
+
+// User Schema
+const userSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    role: { type: String, enum: ['admin', 'superadmin'], default: 'admin' },
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// Analytics Schema
+const analyticsSchema = new mongoose.Schema({
+    eventType: { type: String, required: true },
+    page: String,
+    contentId: String,
+    contentType: String,
+    contentTitle: String,
+    userAgent: String,
+    ip: String,
+    country: String,
+    city: String,
+    device: String,
+    browser: String,
+    os: String,
+    sessionId: String,
+    timestamp: { type: Date, default: Date.now }
+});
+
+// Session Schema
+const sessionSchema = new mongoose.Schema({
+    sessionId: { type: String, required: true, unique: true },
+    ip: String,
+    userAgent: String,
+    device: String,
+    browser: String,
+    os: String,
+    country: String,
+    city: String,
+    currentPage: String,
+    currentContent: String,
+    isActive: { type: Boolean, default: true },
+    startTime: { type: Date, default: Date.now },
+    lastActivity: { type: Date, default: Date.now }
+});
+
+// Get or create models (avoid re-compilation in serverless)
+const User = mongoose.models.User || mongoose.model('User', userSchema);
+const Analytics = mongoose.models.Analytics || mongoose.model('Analytics', analyticsSchema);
+const Session = mongoose.models.Session || mongoose.model('Session', sessionSchema);
+
+// Default admin credentials (fallback when no MongoDB)
+const FALLBACK_ADMIN = {
+    username: 'admin',
+    password: 'admin123',
+    role: 'superadmin'
+};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Enable CORS
@@ -22,7 +110,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         // Route handling
-        if (pathStr.startsWith('dramabox/')) {
+        if (pathStr.startsWith('auth/')) {
+            return await handleAuth(pathStr.replace('auth/', ''), req, res);
+        } else if (pathStr.startsWith('admin/')) {
+            return await handleAdmin(pathStr.replace('admin/', ''), req, res);
+        } else if (pathStr.startsWith('analytics/')) {
+            return await handleAnalytics(pathStr.replace('analytics/', ''), req, res);
+        } else if (pathStr.startsWith('dramabox/')) {
             return await handleDramabox(pathStr.replace('dramabox/', ''), req, res);
         } else if (pathStr.startsWith('anime/')) {
             return await handleAnime(pathStr.replace('anime/', ''), req, res);
@@ -37,6 +131,326 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.error('API Error:', error.message);
         return res.status(500).json({ error: 'Internal server error' });
     }
+}
+
+// ==================== AUTH HANDLERS ====================
+async function handleAuth(action: string, req: VercelRequest, res: VercelResponse) {
+    if (action === 'login' && req.method === 'POST') {
+        const { username, password } = req.body || {};
+
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password required' });
+        }
+
+        await connectDB();
+
+        // Try MongoDB first
+        if (mongoose.connection.readyState === 1) {
+            try {
+                const user = await User.findOne({
+                    $or: [{ username }, { email: username }]
+                });
+
+                if (!user) {
+                    return res.status(401).json({ error: 'Invalid credentials' });
+                }
+
+                if (!user.isActive) {
+                    return res.status(403).json({ error: 'Account is inactive' });
+                }
+
+                const isPasswordValid = await bcrypt.compare(password, user.password);
+                if (!isPasswordValid) {
+                    return res.status(401).json({ error: 'Invalid credentials' });
+                }
+
+                // Update last login
+                user.lastLogin = new Date();
+                await user.save();
+
+                const token = jwt.sign(
+                    { id: user._id, username: user.username, role: user.role },
+                    JWT_SECRET,
+                    { expiresIn: '7d' }
+                );
+
+                return res.json({
+                    success: true,
+                    token,
+                    user: {
+                        id: user._id,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role
+                    }
+                });
+            } catch (error: any) {
+                console.error('Login DB error:', error);
+            }
+        }
+
+        // Fallback to hardcoded admin
+        if (username === FALLBACK_ADMIN.username && password === FALLBACK_ADMIN.password) {
+            const token = jwt.sign(
+                { id: 'fallback-admin', username: FALLBACK_ADMIN.username, role: FALLBACK_ADMIN.role },
+                JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            return res.json({
+                success: true,
+                token,
+                user: {
+                    id: 'fallback-admin',
+                    username: FALLBACK_ADMIN.username,
+                    email: 'admin@dadostream.com',
+                    role: FALLBACK_ADMIN.role
+                }
+            });
+        }
+
+        return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (action === 'verify') {
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.replace('Bearer ', '');
+
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET) as any;
+            return res.json({ success: true, user: decoded });
+        } catch (error) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+    }
+
+    if (action === 'logout') {
+        return res.json({ success: true, message: 'Logged out successfully' });
+    }
+
+    return res.status(404).json({ error: 'Unknown auth action' });
+}
+
+// ==================== ADMIN HANDLERS ====================
+async function handleAdmin(action: string, req: VercelRequest, res: VercelResponse) {
+    // Verify admin token
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.replace('Bearer ', '');
+
+    if (!token) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+        jwt.verify(token, JWT_SECRET);
+    } catch (error) {
+        return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    await connectDB();
+
+    if (action === 'dashboard') {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        let totalUsers = 0, activeSessions = 0, todayPageviews = 0;
+
+        if (mongoose.connection.readyState === 1) {
+            try {
+                [totalUsers, activeSessions, todayPageviews] = await Promise.all([
+                    User.countDocuments(),
+                    Session.countDocuments({ isActive: true, lastActivity: { $gte: new Date(Date.now() - 5 * 60 * 1000) } }),
+                    Analytics.countDocuments({ eventType: 'pageview', timestamp: { $gte: today } })
+                ]);
+            } catch (error) {
+                console.error('Dashboard stats error:', error);
+            }
+        }
+
+        return res.json({
+            success: true,
+            data: {
+                totalUsers,
+                activeSessions,
+                todayPageviews,
+                serverUptime: process.uptime()
+            }
+        });
+    }
+
+    if (action === 'watchers') {
+        const limit = parseInt(req.query.limit as string) || 20;
+        let watchers: any[] = [];
+
+        if (mongoose.connection.readyState === 1) {
+            try {
+                watchers = await Session.find({
+                    isActive: true,
+                    lastActivity: { $gte: new Date(Date.now() - 5 * 60 * 1000) }
+                })
+                .sort({ lastActivity: -1 })
+                .limit(limit)
+                .lean();
+            } catch (error) {
+                console.error('Watchers error:', error);
+            }
+        }
+
+        return res.json({ success: true, data: watchers });
+    }
+
+    if (action === 'stats') {
+        const period = req.query.period as string || '7d';
+        let stats: any = { pageviews: [], topContent: [], devices: [], countries: [] };
+
+        if (mongoose.connection.readyState === 1) {
+            try {
+                const days = period === '30d' ? 30 : period === '24h' ? 1 : 7;
+                const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+                // Get pageviews by day
+                const pageviewsAgg = await Analytics.aggregate([
+                    { $match: { eventType: 'pageview', timestamp: { $gte: startDate } } },
+                    { $group: { 
+                        _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
+                        count: { $sum: 1 }
+                    }},
+                    { $sort: { _id: 1 } }
+                ]);
+
+                // Get top content
+                const topContentAgg = await Analytics.aggregate([
+                    { $match: { eventType: { $in: ['watch', 'read'] }, timestamp: { $gte: startDate } } },
+                    { $group: { 
+                        _id: { contentId: '$contentId', contentTitle: '$contentTitle', contentType: '$contentType' },
+                        views: { $sum: 1 }
+                    }},
+                    { $sort: { views: -1 } },
+                    { $limit: 10 }
+                ]);
+
+                // Get devices
+                const devicesAgg = await Analytics.aggregate([
+                    { $match: { timestamp: { $gte: startDate } } },
+                    { $group: { _id: '$device', count: { $sum: 1 } } },
+                    { $sort: { count: -1 } }
+                ]);
+
+                // Get countries
+                const countriesAgg = await Analytics.aggregate([
+                    { $match: { timestamp: { $gte: startDate } } },
+                    { $group: { _id: '$country', count: { $sum: 1 } } },
+                    { $sort: { count: -1 } },
+                    { $limit: 10 }
+                ]);
+
+                stats = {
+                    pageviews: pageviewsAgg,
+                    topContent: topContentAgg.map(item => ({
+                        ...item._id,
+                        views: item.views
+                    })),
+                    devices: devicesAgg,
+                    countries: countriesAgg
+                };
+            } catch (error) {
+                console.error('Stats error:', error);
+            }
+        }
+
+        return res.json({ success: true, data: stats });
+    }
+
+    if (action === 'users') {
+        let users: any[] = [];
+
+        if (mongoose.connection.readyState === 1) {
+            try {
+                users = await User.find().select('-password').sort({ createdAt: -1 }).lean();
+            } catch (error) {
+                console.error('Users error:', error);
+            }
+        }
+
+        return res.json({ success: true, data: users });
+    }
+
+    return res.status(404).json({ error: 'Unknown admin action' });
+}
+
+// ==================== ANALYTICS HANDLERS ====================
+async function handleAnalytics(action: string, req: VercelRequest, res: VercelResponse) {
+    await connectDB();
+
+    if (action === 'track' && req.method === 'POST') {
+        const eventData = req.body || {};
+        
+        if (mongoose.connection.readyState === 1) {
+            try {
+                // Parse user agent
+                const userAgent = req.headers['user-agent'] || '';
+                const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
+                           req.headers['x-real-ip'] as string || 
+                           'unknown';
+
+                const analytics = new Analytics({
+                    ...eventData,
+                    userAgent,
+                    ip,
+                    timestamp: new Date()
+                });
+                await analytics.save();
+
+                // Update or create session
+                if (eventData.sessionId) {
+                    await Session.findOneAndUpdate(
+                        { sessionId: eventData.sessionId },
+                        {
+                            $set: {
+                                lastActivity: new Date(),
+                                currentPage: eventData.page,
+                                currentContent: eventData.contentTitle,
+                                isActive: true,
+                                userAgent,
+                                ip
+                            },
+                            $setOnInsert: {
+                                startTime: new Date()
+                            }
+                        },
+                        { upsert: true, new: true }
+                    );
+                }
+            } catch (error) {
+                console.error('Track error:', error);
+            }
+        }
+
+        return res.json({ success: true });
+    }
+
+    if (action === 'heartbeat' && req.method === 'POST') {
+        const { sessionId } = req.body || {};
+
+        if (sessionId && mongoose.connection.readyState === 1) {
+            try {
+                await Session.findOneAndUpdate(
+                    { sessionId },
+                    { lastActivity: new Date(), isActive: true }
+                );
+            } catch (error) {
+                console.error('Heartbeat error:', error);
+            }
+        }
+
+        return res.json({ success: true });
+    }
+
+    return res.status(404).json({ error: 'Unknown analytics action' });
 }
 
 // Dramabox handlers
