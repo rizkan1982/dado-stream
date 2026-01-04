@@ -1290,6 +1290,16 @@ async function readKomikChapter(komikId, chapterId, title) {
 
     console.log('Fetching comic images for chapter:', chapterId);
     const response = await fetchAPI(`/komik/getimage?chapter_id=${chapterId}`);
+    
+    // Make sure we have chapters list in state for navigation
+    if (!state.currentEpisodes || state.currentEpisodes.length === 0) {
+      console.log('[Reader] Loading chapters for navigation');
+      const chaptersResponse = await fetchAPI(`/komik/chapterlist?manga_id=${komikId}`);
+      const chapterList = Array.isArray(chaptersResponse) ? chaptersResponse : 
+        (chaptersResponse.data?.list || chaptersResponse.data || []);
+      state.currentEpisodes = chapterList;
+    }
+    
     renderKomikReader(response, title, chapterId, komikId);
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
