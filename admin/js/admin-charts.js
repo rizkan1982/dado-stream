@@ -5,21 +5,34 @@ let hourlyChart = null; // New hourly chart
 
 async function loadTrendChart() {
     try {
-        const res = await fetchAPI('/analytics/trend?days=7');
-        const data = res.data;
+        const res = await fetchAPI('/admin/stats?period=7d');
+        const pageviews = res.data?.pageviews || [];
 
         const ctx = document.getElementById('trendChart');
         if (!ctx) return;
 
         if (trendChart) trendChart.destroy();
 
+        // Generate last 7 days labels
+        const labels = [];
+        const values = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            labels.push(date.toLocaleDateString('id-ID', { weekday: 'short' }));
+            
+            const found = pageviews.find(p => p._id === dateStr);
+            values.push(found ? found.count : 0);
+        }
+
         trendChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.labels,
+                labels: labels,
                 datasets: [{
                     label: 'Visitors',
-                    data: data.values,
+                    data: values,
                     borderColor: '#FF6700',
                     backgroundColor: 'rgba(255, 103, 0, 0.1)',
                     tension: 0.4,
@@ -106,15 +119,42 @@ async function loadHourlyChart() {
 
 async function loadDeviceChart() {
     try {
-        const res = await fetchAPI('/analytics/devices');
-        const devices = res.data || [];
+        const res = await fetchAPI('/admin/stats?period=7d');
+        const devices = res.data?.devices || [];
 
         const ctx = document.getElementById('deviceChart');
         if (!ctx) return;
 
         if (deviceChart) deviceChart.destroy();
 
-        const labels = devices.map(d => d.device || 'unknown');
+        // If no data, show placeholder
+        if (devices.length === 0) {
+            deviceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['No Data'],
+                    datasets: [{
+                        data: [1],
+                        backgroundColor: ['#333333'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#999' }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+            return;
+        }
+
+        const labels = devices.map(d => d._id || 'Unknown');
         const data = devices.map(d => d.count);
 
         deviceChart = new Chart(ctx, {
@@ -123,7 +163,7 @@ async function loadDeviceChart() {
                 labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
                 datasets: [{
                     data: data,
-                    backgroundColor: ['#FF6700', '#FFFFFF', '#333333', '#666666'],
+                    backgroundColor: ['#FF6700', '#FFFFFF', '#333333', '#666666', '#999999'],
                     borderWidth: 2,
                     borderColor: '#1a1a1a'
                 }]

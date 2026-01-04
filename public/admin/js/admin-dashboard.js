@@ -48,15 +48,24 @@ document.querySelectorAll('.nav-item').forEach(item => {
 // Load initial data
 async function loadDashboardData() {
     try {
-        // Get realtime data in one call
-        const realtimeRes = await fetchAPI('/analytics/realtime');
-        if (realtimeRes.success) {
-            const data = realtimeRes.data;
-            document.getElementById('statToday').textContent = data.visitors.today.toLocaleString();
-            document.getElementById('statWeek').textContent = data.visitors.week.toLocaleString();
-            document.getElementById('statMonth').textContent = data.visitors.month.toLocaleString();
-            document.getElementById('statActive').textContent = data.visitors.active;
-            document.getElementById('liveViewers').textContent = data.visitors.active;
+        // Get dashboard stats
+        const dashboardRes = await fetchAPI('/admin/dashboard');
+        if (dashboardRes.success) {
+            const data = dashboardRes.data;
+            document.getElementById('statToday').textContent = data.todayPageviews?.toLocaleString() || '0';
+            document.getElementById('statActive').textContent = data.activeSessions || '0';
+            document.getElementById('liveViewers').textContent = data.activeSessions || '0';
+        }
+
+        // Get detailed stats
+        const statsRes = await fetchAPI('/admin/stats?period=7d');
+        if (statsRes.success) {
+            const stats = statsRes.data;
+            
+            // Calculate week total from pageviews
+            const weekTotal = stats.pageviews?.reduce((sum, day) => sum + (day.count || 0), 0) || 0;
+            document.getElementById('statWeek').textContent = weekTotal.toLocaleString();
+            document.getElementById('statMonth').textContent = '-';
         }
 
         // Load charts
@@ -69,23 +78,12 @@ async function loadDashboardData() {
     } catch (error) {
         console.error('Failed to load dashboard data:', error);
         
-        // Fallback to individual calls
-        try {
-            const statsRes = await fetchAPI('/analytics/stats');
-            if (statsRes.success) {
-                document.getElementById('statToday').textContent = statsRes.data.today.toLocaleString();
-                document.getElementById('statWeek').textContent = statsRes.data.week.toLocaleString();
-                document.getElementById('statMonth').textContent = statsRes.data.month.toLocaleString();
-            }
-            
-            const activeRes = await fetchAPI('/analytics/active');
-            if (activeRes.success) {
-                document.getElementById('statActive').textContent = activeRes.data.count;
-                document.getElementById('liveViewers').textContent = activeRes.data.count;
-            }
-        } catch (e) {
-            console.error('Fallback also failed:', e);
-        }
+        // Set fallback values
+        document.getElementById('statToday').textContent = '0';
+        document.getElementById('statWeek').textContent = '0';
+        document.getElementById('statMonth').textContent = '0';
+        document.getElementById('statActive').textContent = '0';
+        document.getElementById('liveViewers').textContent = '0';
     }
 }
 
@@ -104,15 +102,17 @@ async function loadWatchers() {
 
         container.innerHTML = watchers.map(w => `
             <div class="watcher-item">
-                <div class="watcher-flag">${getCountryFlag(w.location?.countryCode)}</div>
+                <div class="watcher-flag">${getCountryFlag(w.country)}</div>
                 <div class="watcher-info">
-                    <div class="watcher-location">${w.location?.city || 'Unknown'}, ${w.location?.country || 'Unknown'}</div>
-                    <div class="watcher-content">${w.currentContent ? `${w.currentContent.type}: ${w.currentContent.title}` : 'Browsing'}</div>
+                    <div class="watcher-location">${w.city || 'Unknown'}, ${w.country || 'Unknown'}</div>
+                    <div class="watcher-content">${w.currentContent ? w.currentContent : (w.currentPage || 'Browsing')}</div>
+                    <div class="watcher-device">${w.device || ''} • ${w.browser || ''}</div>
                 </div>
             </div>
         `).join('');
     } catch (error) {
         console.error('Failed to load watchers:', error);
+        document.getElementById('watchersList').innerHTML = '<div class="empty-state">No active watchers</div>';
     }
 }
 

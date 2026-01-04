@@ -5,21 +5,34 @@ let hourlyChart = null; // New hourly chart
 
 async function loadTrendChart() {
     try {
-        const res = await fetchAPI('/analytics/trend?days=7');
-        const data = res.data;
+        const res = await fetchAPI('/admin/stats?period=7d');
+        const pageviews = res.data?.pageviews || [];
 
         const ctx = document.getElementById('trendChart');
         if (!ctx) return;
 
         if (trendChart) trendChart.destroy();
 
+        // Generate last 7 days labels
+        const labels = [];
+        const values = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            labels.push(date.toLocaleDateString('id-ID', { weekday: 'short' }));
+            
+            const found = pageviews.find(p => p._id === dateStr);
+            values.push(found ? found.count : 0);
+        }
+
         trendChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.labels,
+                labels: labels,
                 datasets: [{
                     label: 'Visitors',
-                    data: data.values,
+                    data: values,
                     borderColor: '#FF6700',
                     backgroundColor: 'rgba(255, 103, 0, 0.1)',
                     tension: 0.4,
