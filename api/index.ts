@@ -140,22 +140,51 @@ async function handleAnime(action: string, req: VercelRequest, res: VercelRespon
                 params: { page }
             });
             
-            const items = (response.data?.data || []).map((item: any) => ({
+            const animeList = response.data?.data?.animeList || [];
+            const items = animeList.map((item: any) => ({
                 id: item.animeId,
                 urlId: item.animeId,
                 judul: item.title,
                 title: item.title,
                 image: item.poster,
                 thumbnail_url: item.poster,
-                episode: item.tvInfo?.sub || item.tvInfo?.eps || '?',
+                episode: item.episodes || '?',
                 rating: item.rating || '?',
-                type: item.type || 'TV'
+                type: 'Anime'
             }));
             
             return res.json(items);
         } catch (error: any) {
             console.error(`[Anime ${action} Error]:`, error.message);
             return res.status(500).json({ error: `Failed to fetch ${action} anime` });
+        }
+    }
+
+    // Movie anime
+    if (action === 'movie') {
+        try {
+            const page = req.query.page || '1';
+            const response = await axios.get(`${ANIME_API}/movies`, {
+                ...config,
+                params: { page }
+            });
+            
+            const animeList = response.data?.data?.animeList || [];
+            const items = animeList.map((item: any) => ({
+                id: item.animeId,
+                urlId: item.animeId,
+                judul: item.title,
+                title: item.title,
+                image: item.poster,
+                thumbnail_url: item.poster,
+                episode: 'Movie',
+                type: 'Movie'
+            }));
+            
+            return res.json(items);
+        } catch (error: any) {
+            console.error('[Anime Movie Error]:', error.message);
+            return res.status(500).json({ error: 'Failed to fetch anime movies' });
         }
     }
 
@@ -168,14 +197,15 @@ async function handleAnime(action: string, req: VercelRequest, res: VercelRespon
                 params: { page, order: 'popular' }
             });
             
-            const items = (response.data?.data || []).map((item: any) => ({
+            const animeList = response.data?.data?.animeList || [];
+            const items = animeList.map((item: any) => ({
                 id: item.animeId,
                 urlId: item.animeId,
                 judul: item.title,
                 title: item.title,
                 image: item.poster,
                 thumbnail_url: item.poster,
-                episode: item.tvInfo?.sub || '?',
+                episode: item.episodes || '?',
                 rating: item.rating || '?',
                 type: 'Ongoing'
             }));
@@ -201,16 +231,17 @@ async function handleAnime(action: string, req: VercelRequest, res: VercelRespon
                 params: { q: query, page }
             });
             
-            const items = (response.data?.data || []).map((item: any) => ({
+            const animeList = response.data?.data?.animeList || [];
+            const items = animeList.map((item: any) => ({
                 id: item.animeId,
                 urlId: item.animeId,
                 judul: item.title,
                 title: item.title,
                 image: item.poster,
                 thumbnail_url: item.poster,
-                episode: item.tvInfo?.sub || '?',
+                episode: item.episodes || '?',
                 rating: item.rating || '?',
-                type: item.type || 'TV'
+                type: 'Anime'
             }));
             
             return res.json(items);

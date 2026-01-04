@@ -63,6 +63,11 @@ function getProxyVideoUrl(url) {
     return url;
   }
   
+  // Blogger.com embeds must be used directly (not proxied) as they're iframe embeds
+  if (url.includes('blogger.com')) {
+    return url;
+  }
+  
   // Proxy other external videos to solve DNS issues
   return `${API_BASE}/proxy/video?url=${encodeURIComponent(url)}`;
 }
@@ -900,12 +905,14 @@ function renderAnimePlayer(streams, currentIndex, animeTitle, chTitle, chapterUr
 
   console.log(`[Player] Rendering stream ${currentIndex + 1}/${streams.length}:`, videoUrl);
 
-  const isEmbed = stream.link.includes('embed') || stream.link.includes('iframe') || (stream.link.includes('pixeldrain') && !stream.link.includes('download'));
+  // Check if URL should be embedded as iframe (blogger.com always needs iframe)
+  const isBloggerEmbed = stream.link.includes('blogger.com') || videoUrl.includes('blogger.com');
+  const isEmbed = isBloggerEmbed || stream.link.includes('embed') || stream.link.includes('iframe') || (stream.link.includes('pixeldrain') && !stream.link.includes('download'));
 
   container.innerHTML = `
     <div class="player-wrapper glass-card">
       ${isEmbed ?
-      `<iframe src="${videoUrl}" allowfullscreen frameborder="0" allow="autoplay; encrypted-media"></iframe>` :
+      `<iframe src="${videoUrl}" allowfullscreen frameborder="0" allow="autoplay; encrypted-media" style="width:100%;height:100%;border:none;"></iframe>` :
       `<video id="anime-player" controls autoplay playsinline onerror="handleVideoError()">
           <source src="${videoUrl}" type="video/mp4">
           Browser Anda tidak mendukung video HTML5.
