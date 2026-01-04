@@ -1,23 +1,36 @@
 // Socket.IO Real-time Updates
+// Note: Socket.IO is disabled in production (Vercel serverless)
+// Real-time updates use polling instead
+
 let socket = null;
 
 function initSocket() {
-    socket = io('http://localhost:3000');
+    // Skip socket.io in production - use polling instead
+    if (window.location.hostname !== 'localhost') {
+        console.log('ℹ️ Socket.IO disabled in production, using polling');
+        return;
+    }
+    
+    try {
+        socket = io('http://localhost:3000');
 
-    socket.on('connect', () => {
-        console.log('✅ Socket connected');
-        socket.emit('join-admin');
-    });
+        socket.on('connect', () => {
+            console.log('✅ Socket connected');
+            socket.emit('join-admin');
+        });
 
-    socket.on('viewer-update', (data) => {
-        console.log('📊 Viewer update:', data);
-        document.getElementById('liveViewers').textContent = data.count;
-        updateWatchers(data.watchers);
-    });
+        socket.on('viewer-update', (data) => {
+            console.log('📊 Viewer update:', data);
+            document.getElementById('liveViewers').textContent = data.count;
+            updateWatchers(data.watchers);
+        });
 
-    socket.on('disconnect', () => {
-        console.log('❌ Socket disconnected');
-    });
+        socket.on('disconnect', () => {
+            console.log('❌ Socket disconnected');
+        });
+    } catch (error) {
+        console.log('Socket.IO not available');
+    }
 }
 
 function updateWatchers(watchers) {
