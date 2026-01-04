@@ -147,9 +147,29 @@ async function handleAuth(action: string, req: VercelRequest, res: VercelRespons
             return res.status(400).json({ error: 'Username and password required' });
         }
 
+        // Check fallback admin FIRST (always works)
+        if (username === FALLBACK_ADMIN.username && password === FALLBACK_ADMIN.password) {
+            const token = jwt.sign(
+                { id: 'fallback-admin', username: FALLBACK_ADMIN.username, role: FALLBACK_ADMIN.role },
+                JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            return res.json({
+                success: true,
+                token,
+                user: {
+                    id: 'fallback-admin',
+                    username: FALLBACK_ADMIN.username,
+                    email: 'admin@dadostream.com',
+                    role: FALLBACK_ADMIN.role
+                }
+            });
+        }
+
         await connectDB();
 
-        // Try MongoDB first
+        // Try MongoDB for other users
         if (mongoose.connection.readyState === 1) {
             try {
                 const user = await User.findOne({
@@ -192,26 +212,6 @@ async function handleAuth(action: string, req: VercelRequest, res: VercelRespons
             } catch (error: any) {
                 console.error('Login DB error:', error);
             }
-        }
-
-        // Fallback to hardcoded admin
-        if (username === FALLBACK_ADMIN.username && password === FALLBACK_ADMIN.password) {
-            const token = jwt.sign(
-                { id: 'fallback-admin', username: FALLBACK_ADMIN.username, role: FALLBACK_ADMIN.role },
-                JWT_SECRET,
-                { expiresIn: '7d' }
-            );
-
-            return res.json({
-                success: true,
-                token,
-                user: {
-                    id: 'fallback-admin',
-                    username: FALLBACK_ADMIN.username,
-                    email: 'admin@dadostream.com',
-                    role: FALLBACK_ADMIN.role
-                }
-            });
         }
 
         return res.status(401).json({ error: 'Invalid credentials' });
