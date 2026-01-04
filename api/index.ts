@@ -63,6 +63,7 @@ const analyticsSchema = new mongoose.Schema({
     userAgent: String,
     ip: String,
     country: String,
+    countryCode: String,
     city: String,
     device: String,
     browser: String,
@@ -80,6 +81,7 @@ const sessionSchema = new mongoose.Schema({
     browser: String,
     os: String,
     country: String,
+    countryCode: String,
     city: String,
     currentPage: String,
     currentContent: String,
@@ -293,13 +295,27 @@ async function handleAdmin(action: string, req: VercelRequest, res: VercelRespon
 
         if (mongoose.connection.readyState === 1) {
             try {
-                watchers = await Session.find({
+                const rawWatchers = await Session.find({
                     isActive: true,
                     lastActivity: { $gte: new Date(Date.now() - 5 * 60 * 1000) }
                 })
                 .sort({ lastActivity: -1 })
                 .limit(limit)
                 .lean();
+                
+                // Format watchers for frontend
+                watchers = rawWatchers.map((w: any) => ({
+                    sessionId: w.sessionId,
+                    country: w.country || 'Unknown',
+                    countryCode: w.countryCode || '',
+                    city: w.city || 'Unknown',
+                    currentPage: w.currentPage || '/',
+                    currentContent: w.currentContent || null,
+                    device: w.device || 'Unknown',
+                    browser: w.browser || 'Unknown',
+                    os: w.os || 'Unknown',
+                    lastActivity: w.lastActivity
+                }));
             } catch (error) {
                 console.error('Watchers error:', error);
             }
@@ -613,14 +629,35 @@ async function handleAnalytics(action: string, req: VercelRequest, res: VercelRe
             try {
                 // Parse user agent
                 const userAgent = req.headers['user-agent'] || '';
-                const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || 
+                const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 
                            req.headers['x-real-ip'] as string || 
                            'unknown';
+
+                // Get geolocation from IP (using free API)
+                let country = 'Unknown';
+                let city = 'Unknown';
+                let countryCode = '';
+                
+                if (ip && ip !== 'unknown' && !ip.startsWith('127.') && !ip.startsWith('192.168.') && !ip.startsWith('10.')) {
+                    try {
+                        const geoRes = await axios.get(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,city`, { timeout: 2000 });
+                        if (geoRes.data && geoRes.data.status === 'success') {
+                            country = geoRes.data.country || 'Unknown';
+                            city = geoRes.data.city || 'Unknown';
+                            countryCode = geoRes.data.countryCode || '';
+                        }
+                    } catch (geoErr) {
+                        // Ignore geo errors, use default values
+                    }
+                }
 
                 const analytics = new Analytics({
                     ...eventData,
                     userAgent,
                     ip,
+                    country,
+                    city,
+                    countryCode,
                     timestamp: new Date()
                 });
                 await analytics.save();
@@ -636,7 +673,10 @@ async function handleAnalytics(action: string, req: VercelRequest, res: VercelRe
                                 currentContent: eventData.contentTitle,
                                 isActive: true,
                                 userAgent,
-                                ip
+                                ip,
+                                country,
+                                city,
+                                countryCode
                             },
                             $setOnInsert: {
                                 startTime: new Date()

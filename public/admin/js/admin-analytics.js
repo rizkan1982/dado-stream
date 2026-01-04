@@ -29,11 +29,11 @@ async function loadPeakHoursData() {
     if (!container) return;
     
     try {
-        const response = await getAnalytics('peak-hours', { limit: 10 });
+        const response = await fetchAPI('/analytics/peak-hours');
         const data = response.data || [];
         
         if (data.length === 0) {
-            container.innerHTML = '<p style="color: #999; padding: 20px;">No data available yet. Start collecting analytics!</p>';
+            container.innerHTML = '<p style="color: #999; padding: 20px;">No data available yet. Visitors will appear here once they browse your site.</p>';
             return;
         }
         
@@ -43,28 +43,27 @@ async function loadPeakHoursData() {
                     <tr style="background: rgba(255,107,0,0.1); color: #ff6b00;">
                         <th style="padding: 12px; text-align: left;">Country</th>
                         <th style="padding: 12px; text-align: left;">Peak Hour</th>
-                        <th style="padding: 12px; text-align: right;">Peak Visits</th>
-                        <th style="padding: 12px; text-align: right;">Total Visits</th>
+                        <th style="padding: 12px; text-align: right;">Visitors</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${data.map(item => `
                         <tr style="border-bottom: 1px solid #333;">
                             <td style="padding: 12px;">
-                                <span class="flag-icon">${getFlagEmoji(item.countryCode)}</span>
-                                ${item.country}
+                                <span class="flag-icon">${getCountryFlag(item.countryCode || item.country?.substring(0,2))}</span>
+                                ${item.country || 'Unknown'}
                             </td>
                             <td style="padding: 12px; color: #ff6b00; font-weight: 600;">
-                                🕐 ${item.peakHourFormatted}
+                                🕐 ${item.peakHour || '00:00'}
                             </td>
-                            <td style="padding: 12px; text-align: right;">${item.peakCount.toLocaleString()}</td>
-                            <td style="padding: 12px; text-align: right; font-weight: 600;">${item.totalVisits.toLocaleString()}</td>
+                            <td style="padding: 12px; text-align: right; font-weight: 600;">${(item.visitors || 0).toLocaleString()}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
         `;
     } catch (error) {
+        console.error('Peak hours error:', error);
         container.innerHTML = '<p style="color: #ff4444; padding: 20px;">Failed to load data</p>';
     }
 }
@@ -170,7 +169,7 @@ async function loadGeoTable() {
     if (!container) return;
     
     try {
-        const response = await getAnalytics('geo', { limit: 15 });
+        const response = await fetchAPI('/analytics/geo');
         const data = response.data || [];
         
         if (data.length === 0) {
@@ -178,36 +177,35 @@ async function loadGeoTable() {
             return;
         }
         
+        // Calculate total for percentage
+        const total = data.reduce((sum, item) => sum + (item.visitors || 0), 0);
+        
         container.innerHTML = `
             <div style="display: grid; gap: 10px; padding: 10px;">
-                ${data.map(item => `
+                ${data.map(item => {
+                    const percentage = total > 0 ? ((item.visitors || 0) / total * 100) : 0;
+                    return `
                     <div style="display: flex; align-items: center; gap: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                        <span style="font-size: 24px;">${getFlagEmoji(item.countryCode)}</span>
+                        <span style="font-size: 24px;">${getCountryFlag(item.countryCode || item.country?.substring(0,2))}</span>
                         <div style="flex: 1;">
-                            <div style="font-weight: 600;">${item.country}</div>
-                            <div style="font-size: 12px; color: #999;">${item.count.toLocaleString()} visits</div>
+                            <div style="font-weight: 600;">${item.country || 'Unknown'}</div>
+                            <div style="font-size: 12px; color: #999;">${(item.visitors || 0).toLocaleString()} visits</div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="color: #ff6b00; font-weight: 700;">${item.percentage.toFixed(1)}%</div>
+                            <div style="color: #ff6b00; font-weight: 700;">${percentage.toFixed(1)}%</div>
                             <div style="height: 4px; width: 60px; background: #333; border-radius: 2px; overflow: hidden;">
-                                <div style="height: 100%; width: ${item.percentage}%; background: #ff6b00;"></div>
+                                <div style="height: 100%; width: ${percentage}%; background: #ff6b00;"></div>
                             </div>
                         </div>
                     </div>
-                `).join('')}
+                `}).join('')}
             </div>
         `;
     } catch (error) {
+        console.error('Geo table error:', error);
         container.innerHTML = '<p style="color: #ff4444; padding: 20px;">Failed to load geographic data</p>';
     }
 }
 
-// Get flag emoji from country code
-function getFlagEmoji(countryCode) {
-    if (!countryCode || countryCode.length !== 2) return '🌍';
-    const codePoints = countryCode
-        .toUpperCase()
-        .split('')
-        .map(char => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
-}
+// Get flag emoji from country code (use getCountryFlag from admin-utils.js)
+// getFlagEmoji is deprecated, use getCountryFlag instead

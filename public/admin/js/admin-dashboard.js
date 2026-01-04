@@ -102,11 +102,11 @@ async function loadWatchers() {
 
         container.innerHTML = watchers.map(w => `
             <div class="watcher-item">
-                <div class="watcher-flag">${getCountryFlag(w.country)}</div>
+                <div class="watcher-flag">${getCountryFlag(w.countryCode)}</div>
                 <div class="watcher-info">
-                    <div class="watcher-location">${w.city || 'Unknown'}, ${w.country || 'Unknown'}</div>
-                    <div class="watcher-content">${w.currentContent ? w.currentContent : (w.currentPage || 'Browsing')}</div>
-                    <div class="watcher-device">${w.device || ''} • ${w.browser || ''}</div>
+                    <div class="watcher-location">${w.city}, ${w.country}</div>
+                    <div class="watcher-content">${w.currentContent || w.currentPage || '/'}</div>
+                    <div class="watcher-device">${w.device} • ${w.browser} • ${w.os}</div>
                 </div>
             </div>
         `).join('');
