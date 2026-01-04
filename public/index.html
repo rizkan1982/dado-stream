@@ -61,61 +61,69 @@
 
   <!-- Navigation -->
   <header class="header">
-    <div class="nav-top container">
-      <!-- Menu Button (Hamburger) -->
-      <button class="nav-toggle-btn" onclick="toggleMenu()">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z" />
-        </svg>
+    <div class="nav-top">
+      <!-- Hamburger Menu Button -->
+      <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
       </button>
 
-      <a href="#" class="nav-logo" onclick="goHome()">
-        <img src="/dado.png" alt="DADO STREAM" class="logo-img">
+      <!-- Logo -->
+      <a href="#" class="nav-logo" onclick="goHome(); return false;">
+        <img src="/dado.png" alt="DADO" class="logo-img">
         <span class="logo-text">DADO</span>
       </a>
 
-      <!-- Center Search Bar -->
-      <div class="search-container">
-        <div class="search-wrapper">
-          <input type="text" id="search-input" class="search-input" placeholder="Cari...">
-          <button class="search-btn" onclick="performSearch()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.35-4.35"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="nav-actions">
-        <!-- PWA Install Button -->
-        <button id="pwa-install-btn" class="btn-app" onclick="installPWA()" style="display: none;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 4px;">
-            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+      <!-- Search Icon (Mobile) / Search Bar (Desktop) -->
+      <div class="nav-right">
+        <button class="search-icon-btn" onclick="toggleSearchBar()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
           </svg>
-          APP
-        </button>
-        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" style="display: none;">
-          <span class="theme-icon moon">🌙</span>
         </button>
       </div>
     </div>
 
-    <!-- Category Tabs - Desktop Style -->
-    <div class="nav-tabs-wrapper">
-      <div class="container">
-        <ul class="nav-tabs">
-          <li><a href="#" class="tab-link active" data-section="home" onclick="navigateTo('home')">Rekomendasi</a></li>
-          <li><a href="#" class="tab-link" data-section="drama" onclick="navigateTo('drama')">Drama</a></li>
-          <li><a href="#" class="tab-link" onclick="loadDramaCategory('dubindo')">Indo Dub</a></li>
-          <li><a href="#" class="tab-link" data-section="anime" onclick="navigateTo('anime')">Anime</a></li>
-          <li><a href="#" class="tab-link" data-section="komik" onclick="navigateTo('komik')">Komik</a></li>
-          <li><a href="#" class="tab-link" onclick="loadDramaCategory('trending')">Trending</a></li>
-          <li><a href="#" class="tab-link" onclick="loadDramaCategory('foryou')">For You</a></li>
-        </ul>
+    <!-- Mobile Search Bar (Hidden by default) -->
+    <div class="mobile-search-bar" id="mobile-search-bar">
+      <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Cari drama, anime, komik...">
+      <button class="mobile-search-submit" onclick="performMobileSearch()">Cari</button>
+      <button class="mobile-search-close" onclick="toggleSearchBar()">✕</button>
+    </div>
+
+    <!-- Desktop Search (hidden on mobile) -->
+    <div class="desktop-search">
+      <div class="search-wrapper">
+        <input type="text" id="search-input" class="search-input" placeholder="Cari drama, anime, komik...">
+        <button class="search-btn" onclick="performSearch()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </header>
+
+  <!-- Mobile Sidebar Menu -->
+  <div class="mobile-menu-overlay" id="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+  <nav class="mobile-menu" id="mobile-menu">
+    <div class="mobile-menu-header">
+      <img src="/dado.png" alt="DADO" class="mobile-menu-logo">
+      <span>DADO STREAM</span>
+    </div>
+    <ul class="mobile-menu-list">
+      <li><a href="#" class="mobile-menu-link active" onclick="mobileNavigate('home')">🏠 Rekomendasi</a></li>
+      <li><a href="#" class="mobile-menu-link" onclick="mobileNavigate('drama')">🎬 Drama</a></li>
+      <li><a href="#" class="mobile-menu-link" onclick="mobileDramaCategory('dubindo')">🇮🇩 Indo Dub</a></li>
+      <li><a href="#" class="mobile-menu-link" onclick="mobileNavigate('anime')">⚔️ Anime</a></li>
+      <li><a href="#" class="mobile-menu-link" onclick="mobileNavigate('komik')">📚 Komik</a></li>
+      <li><a href="#" class="mobile-menu-link" onclick="mobileDramaCategory('trending')">🔥 Trending</a></li>
+      <li><a href="#" class="mobile-menu-link" onclick="mobileDramaCategory('foryou')">❤️ For You</a></li>
+    </ul>
+  </nav>
 
   <!-- Main Content -->
   <main class="main" id="main-content">

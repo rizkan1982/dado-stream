@@ -258,16 +258,90 @@ function goBack() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ========================================
+// Mobile Menu Functions
+// ========================================
+
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const overlay = document.getElementById('mobile-menu-overlay');
+  const hamburger = document.getElementById('hamburger-btn');
+  
+  menu.classList.toggle('active');
+  overlay.classList.toggle('active');
+  hamburger.classList.toggle('active');
+  
+  // Prevent body scroll when menu is open
+  document.body.style.overflow = menu.classList.contains('active') ? 'hidden' : '';
+}
+
+function closeMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const overlay = document.getElementById('mobile-menu-overlay');
+  const hamburger = document.getElementById('hamburger-btn');
+  
+  menu.classList.remove('active');
+  overlay.classList.remove('active');
+  hamburger.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function mobileNavigate(section) {
+  closeMobileMenu();
+  
+  // Update active state in mobile menu
+  document.querySelectorAll('.mobile-menu-link').forEach(link => {
+    link.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  navigateTo(section);
+}
+
+function mobileDramaCategory(category) {
+  closeMobileMenu();
+  loadDramaCategory(category);
+}
+
+function toggleSearchBar() {
+  const searchBar = document.getElementById('mobile-search-bar');
+  searchBar.classList.toggle('active');
+  
+  if (searchBar.classList.contains('active')) {
+    document.getElementById('mobile-search-input').focus();
+  }
+}
+
+function performMobileSearch() {
+  const input = document.getElementById('mobile-search-input');
+  const query = input.value.trim();
+  
+  if (query) {
+    document.getElementById('search-input').value = query;
+    performSearch();
+    toggleSearchBar();
+    input.value = '';
+  }
+}
+
+// Close search bar on Enter key
+document.addEventListener('DOMContentLoaded', () => {
+  const mobileSearchInput = document.getElementById('mobile-search-input');
+  if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performMobileSearch();
+      }
+    });
+  }
+});
+
+// Legacy toggle functions for compatibility
 function toggleMenu() {
-  const navMenu = document.getElementById('nav-menu');
-  const navToggle = document.getElementById('nav-toggle');
-  navMenu.classList.toggle('active');
-  navToggle.classList.toggle('active');
+  toggleMobileMenu();
 }
 
 function closeMenu() {
-  const navMenu = document.getElementById('nav-menu');
-  const navToggle = document.getElementById('nav-toggle');
   navMenu.classList.remove('active');
   navToggle.classList.remove('active');
 }
