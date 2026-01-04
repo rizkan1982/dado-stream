@@ -445,6 +445,103 @@
     }
   </script>
   
+  <!-- Analytics Tracking Script -->
+  <script>
+    (function() {
+      // Generate or get session ID
+      let sessionId = localStorage.getItem('dado_session_id');
+      if (!sessionId) {
+        sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('dado_session_id', sessionId);
+      }
+
+      // Get device info
+      function getDeviceInfo() {
+        const ua = navigator.userAgent;
+        let device = 'Desktop';
+        let browser = 'Unknown';
+        let os = 'Unknown';
+
+        // Detect device
+        if (/Mobile|Android|iPhone|iPad/i.test(ua)) {
+          device = /iPad/i.test(ua) ? 'Tablet' : 'Mobile';
+        }
+
+        // Detect browser
+        if (/Chrome/i.test(ua) && !/Edge|Edg/i.test(ua)) browser = 'Chrome';
+        else if (/Firefox/i.test(ua)) browser = 'Firefox';
+        else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+        else if (/Edge|Edg/i.test(ua)) browser = 'Edge';
+        else if (/Opera|OPR/i.test(ua)) browser = 'Opera';
+
+        // Detect OS
+        if (/Windows/i.test(ua)) os = 'Windows';
+        else if (/Mac/i.test(ua)) os = 'MacOS';
+        else if (/Linux/i.test(ua)) os = 'Linux';
+        else if (/Android/i.test(ua)) os = 'Android';
+        else if (/iOS|iPhone|iPad/i.test(ua)) os = 'iOS';
+
+        return { device, browser, os };
+      }
+
+      // Track event function
+      async function trackEvent(eventType, data = {}) {
+        try {
+          const deviceInfo = getDeviceInfo();
+          await fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              eventType,
+              sessionId,
+              page: window.location.pathname,
+              ...deviceInfo,
+              ...data,
+              timestamp: new Date().toISOString()
+            })
+          });
+        } catch (e) {
+          console.log('Track error:', e);
+        }
+      }
+
+      // Track pageview on load
+      trackEvent('pageview');
+
+      // Track navigation changes
+      let lastPage = window.location.pathname;
+      setInterval(() => {
+        const currentPage = window.location.pathname + window.location.hash;
+        if (currentPage !== lastPage) {
+          lastPage = currentPage;
+          trackEvent('pageview', { page: currentPage });
+        }
+      }, 1000);
+
+      // Heartbeat to keep session alive (every 30 seconds)
+      setInterval(async () => {
+        try {
+          await fetch('/api/analytics/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+        } catch (e) {}
+      }, 30000);
+
+      // Track content views (expose globally)
+      window.trackContentView = function(contentId, contentTitle, contentType) {
+        trackEvent(contentType === 'komik' ? 'read' : 'watch', {
+          contentId,
+          contentTitle,
+          contentType
+        });
+      };
+
+      console.log('[Analytics] Tracking initialized');
+    })();
+  </script>
+  
   <!-- Adsterra Social Bar -->
   <script src="https://pl28403030.effectivegatecpm.com/76/ea/39/76ea39059560fa1b5f44fa42ae5d454b.js"></script>
 </body>
