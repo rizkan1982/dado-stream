@@ -28,7 +28,12 @@ async function connectDB() {
     }
 
     try {
-        cachedDb = await mongoose.connect(MONGODB_URI);
+        cachedDb = await mongoose.connect(MONGODB_URI, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 10000,
+            maxPoolSize: 10,
+            minPoolSize: 1,
+        });
         console.log('MongoDB connected');
         return cachedDb;
     } catch (error) {
