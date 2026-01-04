@@ -111,16 +111,17 @@ async function handleAnime(action: string, req: VercelRequest, res: VercelRespon
                 params: { page }
             });
             
-            const items = (response.data?.data || []).map((item: any) => ({
-                id: item.animeId || item.episodeId,
-                urlId: item.episodeId,
+            const animeList = response.data?.data?.animeList || [];
+            const items = animeList.map((item: any) => ({
+                id: item.animeId,
+                urlId: item.animeId,
                 judul: item.title,
                 title: item.title,
                 image: item.poster,
                 thumbnail_url: item.poster,
-                episode: 'Latest',
-                releaseDate: item.releaseDate,
-                type: 'Episode'
+                episode: item.episodes || 'Latest',
+                releaseDate: item.releasedOn,
+                type: 'Anime'
             }));
             
             return res.json(items);
