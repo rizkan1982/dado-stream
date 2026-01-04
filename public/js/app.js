@@ -1919,6 +1919,101 @@ function closeModal() {
   modal.classList.remove('active');
 }
 
+// Tentang Kami Modal
+function showTentangKami() {
+  const content = `
+    <div style="padding: 20px; max-width: 600px;">
+      <h2 style="color: #FF6B00; margin-bottom: 20px; font-size: 24px;">Tentang DADO STREAM</h2>
+      
+      <p style="margin-bottom: 15px; line-height: 1.7; color: #ddd;">
+        DADO STREAM lahir dari kecintaan kami terhadap dunia hiburan Asia. Kami paham betapa sulitnya 
+        mencari platform yang menyediakan drama China, anime, dan komik dalam satu tempat yang mudah diakses.
+      </p>
+      
+      <p style="margin-bottom: 15px; line-height: 1.7; color: #ddd;">
+        Berawal dari hobi nonton drama China tengah malam dan marathon anime sampai subuh, kami akhirnya 
+        memutuskan untuk membangun platform ini. Bukan sekadar website biasa, tapi rumah digital buat 
+        semua pecinta konten Asia.
+      </p>
+      
+      <p style="margin-bottom: 15px; line-height: 1.7; color: #ddd;">
+        Di DADO STREAM, kamu bisa menikmati ribuan judul drama China dengan subtitle Indonesia, 
+        koleksi anime lengkap dari yang jadul sampai ongoing, plus komik-komik seru yang update tiap hari. 
+        Semua gratis, tanpa ribet, langsung tancap gas nonton.
+      </p>
+      
+      <p style="margin-bottom: 20px; line-height: 1.7; color: #ddd;">
+        Kami terus berusaha menghadirkan pengalaman streaming terbaik. Kalau ada saran atau konten yang 
+        pengen ditambahin, langsung hubungi kami aja. Selamat menikmati! 🎬
+      </p>
+      
+      <div style="text-align: center; padding-top: 15px; border-top: 1px solid #333;">
+        <span style="color: #FF6B00; font-weight: 600;">DADO STREAM</span>
+        <span style="color: #888;"> - Hiburan Tanpa Batas</span>
+      </div>
+    </div>
+  `;
+  openModal(content);
+}
+
+// FAQ Modal
+function showFAQ() {
+  const content = `
+    <div style="padding: 20px; max-width: 600px;">
+      <h2 style="color: #FF6B00; margin-bottom: 25px; font-size: 24px;">Pertanyaan yang Sering Ditanyakan</h2>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="color: #fff; margin-bottom: 8px;">❓ DADO STREAM itu apa sih?</h4>
+        <p style="color: #bbb; line-height: 1.6;">
+          Platform streaming gratis buat nonton drama China, anime, dan baca komik. Satu aplikasi, semua hiburan ada.
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="color: #fff; margin-bottom: 8px;">💰 Beneran gratis? Nggak ada biaya tersembunyi?</h4>
+        <p style="color: #bbb; line-height: 1.6;">
+          Iya, 100% gratis. Nggak perlu langganan, nggak perlu bayar apapun. Tinggal buka dan nikmati.
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="color: #fff; margin-bottom: 8px;">📱 Bisa dibuka di HP?</h4>
+        <p style="color: #bbb; line-height: 1.6;">
+          Bisa banget! Website kami responsive, jadi mau buka di HP, tablet, atau laptop sama enaknya.
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="color: #fff; margin-bottom: 8px;">🎬 Subtitle-nya bahasa apa?</h4>
+        <p style="color: #bbb; line-height: 1.6;">
+          Kebanyakan drama China sudah ada subtitle Indonesia. Untuk anime juga tersedia sub Indo.
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="color: #fff; margin-bottom: 8px;">🔄 Kontennya update nggak?</h4>
+        <p style="color: #bbb; line-height: 1.6;">
+          Update dong! Drama dan anime ongoing kita usahakan update secepat mungkin. Komik juga update chapter terbaru.
+        </p>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <h4 style="color: #fff; margin-bottom: 8px;">📞 Kalau ada masalah atau saran, hubungi kemana?</h4>
+        <p style="color: #bbb; line-height: 1.6;">
+          Langsung chat aja ke WhatsApp kami. Klik tombol "Kontak" di bagian bawah website.
+        </p>
+      </div>
+      
+      <div style="text-align: center; padding-top: 15px; border-top: 1px solid #333;">
+        <a href="https://wa.me/6281945330179" target="_blank" style="color: #25D366; text-decoration: none; font-weight: 600;">
+          💬 Hubungi Kami via WhatsApp
+        </a>
+      </div>
+    </div>
+  `;
+  openModal(content);
+}
+
 // Close modal on backdrop click
 document.getElementById('modal')?.addEventListener('click', (e) => {
   if (e.target.id === 'modal') {
@@ -1934,4 +2029,4 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-console.log('🎬 WibuStream loaded successfully!');
+console.log('🎬 DADO STREAM loaded successfully!');

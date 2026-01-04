@@ -476,7 +476,36 @@ ol {
     border-left-color: #FF6B00;
 }
 
-/* Logo */
+/* Logo - Centered Text Only */
+.nav-logo-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-decoration: none;
+}
+
+.logo-text-center {
+    font-size: 20px;
+    font-weight: 800;
+    color: #FF6B00;
+    white-space: nowrap;
+    letter-spacing: 1px;
+}
+
+/* Mobile logo adjustments */
+@media (max-width: 480px) {
+    .logo-text-center {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 360px) {
+    .logo-text-center {
+        font-size: 14px;
+    }
+}
+
+/* Legacy logo styles (keep for compatibility) */
 .nav-logo {
     display: flex;
     align-items: center;
@@ -497,18 +526,6 @@ ol {
     font-weight: 800;
     color: #FF6B00;
     white-space: nowrap;
-}
-
-/* Mobile logo adjustments */
-@media (max-width: 480px) {
-    .logo-img {
-        height: 30px;
-        width: 30px;
-    }
-    
-    .logo-text {
-        font-size: 14px;
-    }
 }
 
 .logo-icon {

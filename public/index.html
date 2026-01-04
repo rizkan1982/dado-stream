@@ -69,10 +69,9 @@
         <span></span>
       </button>
 
-      <!-- Logo -->
-      <a href="#" class="nav-logo" onclick="goHome(); return false;">
-        <img src="/dado.png" alt="DADO STREAM" class="logo-img">
-        <span class="logo-text">DADO STREAM</span>
+      <!-- Logo Text Only - Centered -->
+      <a href="#" class="nav-logo-center" onclick="goHome(); return false;">
+        <span class="logo-text-center">DADO STREAM</span>
       </a>
 
       <!-- Search Icon (Mobile) / Search Bar (Desktop) -->
@@ -345,23 +344,22 @@
       <div class="footer-content">
         <div class="footer-brand">
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-            <img src="/dado.png" alt="DADO STREAM" style="height: 50px; width: 50px; object-fit: contain; border-radius: 8px;">
             <span style="font-size: 24px; font-weight: 800; color: #FF6B00;">DADO STREAM</span>
           </div>
-          <p class="footer-desc">Platform streaming drama China, anime, dan baca komik terlengkap.</p>
+          <p class="footer-desc">Platform streaming drama China, anime, dan baca komik terlengkap. Nikmati ribuan konten hiburan berkualitas tinggi, gratis tanpa iklan yang mengganggu.</p>
         </div>
         <div class="footer-links">
           <div class="footer-section">
             <h4>Konten</h4>
-            <a href="#" onclick="navigateTo('drama')">Drama China</a>
-            <a href="#" onclick="navigateTo('anime')">Anime</a>
-            <a href="#" onclick="navigateTo('komik')">Komik</a>
+            <a href="#" onclick="navigateTo('drama'); return false;">Drama China</a>
+            <a href="#" onclick="navigateTo('anime'); return false;">Anime</a>
+            <a href="#" onclick="navigateTo('komik'); return false;">Komik</a>
           </div>
           <div class="footer-section">
             <h4>Lainnya</h4>
-            <a href="#">Tentang Kami</a>
-            <a href="#">Kontak</a>
-            <a href="#">FAQ</a>
+            <a href="#" onclick="showTentangKami(); return false;">Tentang Kami</a>
+            <a href="https://wa.me/6281945330179" target="_blank" rel="noopener">Kontak</a>
+            <a href="#" onclick="showFAQ(); return false;">FAQ</a>
           </div>
         </div>
       </div>
