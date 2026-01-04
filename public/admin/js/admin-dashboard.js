@@ -219,3 +219,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
         }
     });
 });
+
+// Initialize dashboard on page load
+console.log('Admin Dashboard initialized');
+loadDashboardData();

@@ -45,6 +45,7 @@ function getCountryFlag(code) {
 // API Helper - fetch with auth token
 async function fetchAPI(endpoint) {
     const token = localStorage.getItem('adminToken');
+    console.log('fetchAPI called:', endpoint, 'Token exists:', !!token);
     
     if (!token) {
         console.error('No auth token found');
@@ -53,13 +54,18 @@ async function fetchAPI(endpoint) {
     }
     
     try {
-        const response = await fetch(`/api${endpoint}`, {
+        const url = `/api${endpoint}`;
+        console.log('Fetching:', url);
+        
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             }
         });
+        
+        console.log('Response status:', response.status);
         
         if (response.status === 401) {
             console.error('Unauthorized - redirecting to login');
@@ -69,6 +75,7 @@ async function fetchAPI(endpoint) {
         }
         
         const data = await response.json();
+        console.log('API Response:', data);
         return data;
     } catch (error) {
         console.error('API Error:', error);
