@@ -480,19 +480,16 @@ ol {
 .nav-logo {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: var(--font-size-xl);
-    font-weight: 800;
-    z-index: 10;
+    gap: 10px;
     text-decoration: none;
     flex-shrink: 0;
 }
 
 .logo-img {
-    height: 32px;
-    width: 32px;
+    height: 36px;
+    width: 36px;
     object-fit: contain;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .logo-text {
@@ -500,6 +497,18 @@ ol {
     font-weight: 800;
     color: #FF6B00;
     white-space: nowrap;
+}
+
+/* Mobile logo adjustments */
+@media (max-width: 480px) {
+    .logo-img {
+        height: 30px;
+        width: 30px;
+    }
+    
+    .logo-text {
+        font-size: 14px;
+    }
 }
 
 .logo-icon {

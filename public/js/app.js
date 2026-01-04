@@ -334,6 +334,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // Setup mobile menu click handlers
+  document.querySelectorAll('.mobile-menu-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      const section = link.dataset.section;
+      const category = link.dataset.category;
+      
+      // Update active state
+      document.querySelectorAll('.mobile-menu-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      
+      closeMobileMenu();
+      
+      if (section) {
+        navigateTo(section);
+      } else if (category) {
+        loadDramaCategory(category);
+      }
+    });
+  });
 });
 
 // Legacy toggle functions for compatibility
@@ -1412,7 +1434,17 @@ function isCreditImage(url) {
 function renderKomikReader(response, title, chapterId, komikId) {
   const container = document.getElementById('reader-content');
   const chapters = state.currentEpisodes || [];
-  const currentIdx = chapters.findIndex(ch => ch.chapter_id === chapterId);
+  
+  // Find current chapter index - try multiple ID fields
+  let currentIdx = chapters.findIndex(ch => {
+    const chId = ch.chapter_id || ch.id || ch.slug;
+    return chId === chapterId || String(chId) === String(chapterId);
+  });
+  
+  console.log('[Reader] Chapter lookup:', { chapterId, currentIdx, totalChapters: chapters.length });
+  if (chapters.length > 0) {
+    console.log('[Reader] First chapter sample:', chapters[0]);
+  }
 
   // Sansekai API: can be many structures
   let imagesArray = [];
@@ -1467,11 +1499,16 @@ function renderKomikReader(response, title, chapterId, komikId) {
     `;
   }).join('');
 
-  const hasPrev = currentIdx < chapters.length - 1; // Chapters are usually desc
-  const hasNext = currentIdx > 0;
+  const hasPrev = currentIdx !== -1 && currentIdx < chapters.length - 1;
+  const hasNext = currentIdx !== -1 && currentIdx > 0;
 
-  const prevChapter = hasPrev ? chapters[currentIdx + 1] : null;
-  const nextChapter = hasNext ? chapters[currentIdx - 1] : null;
+  // Get chapter IDs properly
+  const prevChapterId = hasPrev ? (chapters[currentIdx + 1]?.chapter_id || chapters[currentIdx + 1]?.id || chapters[currentIdx + 1]?.slug) : null;
+  const nextChapterId = hasNext ? (chapters[currentIdx - 1]?.chapter_id || chapters[currentIdx - 1]?.id || chapters[currentIdx - 1]?.slug) : null;
+  const prevChapterTitle = hasPrev ? (chapters[currentIdx + 1]?.title || title) : '';
+  const nextChapterTitle = hasNext ? (chapters[currentIdx - 1]?.title || title) : '';
+
+  console.log('[Reader] Navigation:', { currentIdx, hasPrev, hasNext, prevChapterId, nextChapterId, totalChapters: chapters.length });
 
   container.innerHTML = `
     <div class="reader-wrapper">
@@ -1481,13 +1518,13 @@ function renderKomikReader(response, title, chapterId, komikId) {
            <span class="reader-title" style="flex:1;">${title}</span>
         </div>
         <div class="reader-nav" style="display:flex; gap:10px;">
-          <button class="btn btn-sm btn-primary" ${!hasPrev ? 'disabled' : ''} 
-                  onclick="readKomikChapter('${komikId}', '${prevChapter?.chapter_id}', '${prevChapter?.title}')">
-            Prev Chapter
+          <button class="btn btn-sm btn-primary" ${!hasPrev ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''} 
+                  onclick="${hasPrev ? `readKomikChapter('${komikId}', '${prevChapterId}', '${escapeHtml(prevChapterTitle)}')` : ''}">
+            ← Prev
           </button>
-          <button class="btn btn-sm btn-primary" ${!hasNext ? 'disabled' : ''} 
-                  onclick="readKomikChapter('${komikId}', '${nextChapter?.chapter_id}', '${nextChapter?.title}')">
-            Next Chapter
+          <button class="btn btn-sm btn-primary" ${!hasNext ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''} 
+                  onclick="${hasNext ? `readKomikChapter('${komikId}', '${nextChapterId}', '${escapeHtml(nextChapterTitle)}')` : ''}">
+            Next →
           </button>
         </div>
       </div>
@@ -1495,10 +1532,10 @@ function renderKomikReader(response, title, chapterId, komikId) {
         ${imagesHtml || '<p class="no-results">Tidak ada gambar tersedia</p>'}
       </div>
       <div class="reader-footer-nav" style="padding: 40px; text-align: center; background: #000;">
-          <button class="btn btn-primary btn-glow" ${!hasNext ? 'disabled' : ''} 
-                  onclick="readKomikChapter('${komikId}', '${nextChapter?.chapter_id}', '${nextChapter?.title}')"
+          <button class="btn btn-primary btn-glow" ${!hasNext ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''} 
+                  onclick="${hasNext ? `readKomikChapter('${komikId}', '${nextChapterId}', '${escapeHtml(nextChapterTitle)}')` : ''}"
                   style="padding: 15px 50px; font-size: 18px; border-radius: 30px;">
-            ${hasNext ? 'Baca Chapter Selanjutnya →' : 'Semua Chapter Selesai'}
+            ${hasNext ? 'Baca Chapter Selanjutnya →' : 'Ini Chapter Terakhir'}
           </button>
       </div>
     </div>
