@@ -106,7 +106,20 @@ function getProxyVideoUrl(url) {
     return url;
   }
   
-  // Proxy other external videos to solve DNS issues
+  // Wibufile, samehadaku, backup blogspot - these are direct video files or embeds
+  // Don't proxy them because they're too large for Vercel's 4.5MB limit
+  // and have their own embed system
+  if (url.includes('wibufile') || url.includes('samehadaku') || url.includes('wibuu.info') || url.includes('backup') || url.includes('blogspot')) {
+    return url; // Use directly - they work in iframe or direct
+  }
+  
+  // Only proxy small files or files that need CORS bypass
+  // For video files, most are too large - just return as-is
+  if (url.endsWith('.mp4') || url.endsWith('.m3u8') || url.endsWith('.webm')) {
+    return url; // Direct video files - too large to proxy
+  }
+  
+  // For other URLs (streaming services, etc), try proxy but expect it might fail
   return `${API_BASE}/proxy/video?url=${encodeURIComponent(url)}`;
 }
 
@@ -122,6 +135,9 @@ function handleImageError(img) {
 // ==========================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Check if user has selected a focus before
+  checkWelcomeScreen();
+  
   // Initialize browser history with home state
   if (!history.state) {
     history.replaceState({ section: 'home' }, '', '#home');
@@ -132,6 +148,118 @@ document.addEventListener('DOMContentLoaded', () => {
   loadInitialData();
   hideLoadingOverlay();
 });
+
+// ==========================================================================
+// Welcome Screen & Focus Mode
+// ==========================================================================
+
+let currentFocus = localStorage.getItem('dado_focus') || null;
+
+function checkWelcomeScreen() {
+  const welcomeScreen = document.getElementById('welcome-screen');
+  if (!welcomeScreen) return;
+  
+  // If user has already selected a focus, skip welcome screen
+  if (currentFocus) {
+    welcomeScreen.classList.add('hidden');
+    applyFocusMode(currentFocus);
+  }
+}
+
+function selectFocus(focus) {
+  currentFocus = focus;
+  localStorage.setItem('dado_focus', focus);
+  
+  const welcomeScreen = document.getElementById('welcome-screen');
+  if (welcomeScreen) {
+    welcomeScreen.classList.add('hidden');
+  }
+  
+  applyFocusMode(focus);
+  
+  // Auto-navigate to the focused section
+  if (focus === 'drama') {
+    navigateTo('drama');
+  } else if (focus === 'anime') {
+    navigateTo('anime');
+  } else if (focus === 'komik') {
+    navigateTo('komik');
+  }
+}
+
+function applyFocusMode(focus) {
+  // Remove existing focus indicator
+  const existingIndicator = document.querySelector('.focus-indicator');
+  if (existingIndicator) existingIndicator.remove();
+  
+  if (focus === 'all') return;
+  
+  // Add focus indicator
+  const indicator = document.createElement('div');
+  indicator.className = 'focus-indicator visible';
+  indicator.innerHTML = `
+    <span>Fokus: ${focus.charAt(0).toUpperCase() + focus.slice(1)}</span>
+    <button class="close-focus" onclick="clearFocus()">✕</button>
+  `;
+  document.body.appendChild(indicator);
+  
+  // Hide non-focused sections on home
+  updateHomeForFocus(focus);
+}
+
+function updateHomeForFocus(focus) {
+  const sections = {
+    drama: document.getElementById('home-drama-grid'),
+    anime: document.getElementById('home-anime-grid'),
+    komik: document.getElementById('home-komik-grid')
+  };
+  
+  // Get parent sections
+  const dramaSection = sections.drama?.closest('.content-section');
+  const animeSection = sections.anime?.closest('.content-section');
+  const komikSection = sections.komik?.closest('.content-section');
+  
+  if (focus === 'drama') {
+    if (dramaSection) dramaSection.style.display = '';
+    if (animeSection) animeSection.style.display = 'none';
+    if (komikSection) komikSection.style.display = 'none';
+  } else if (focus === 'anime') {
+    if (dramaSection) dramaSection.style.display = 'none';
+    if (animeSection) animeSection.style.display = '';
+    if (komikSection) komikSection.style.display = 'none';
+  } else if (focus === 'komik') {
+    if (dramaSection) dramaSection.style.display = 'none';
+    if (animeSection) animeSection.style.display = 'none';
+    if (komikSection) komikSection.style.display = '';
+  } else {
+    // Show all
+    if (dramaSection) dramaSection.style.display = '';
+    if (animeSection) animeSection.style.display = '';
+    if (komikSection) komikSection.style.display = '';
+  }
+}
+
+function clearFocus() {
+  currentFocus = 'all';
+  localStorage.setItem('dado_focus', 'all');
+  
+  const indicator = document.querySelector('.focus-indicator');
+  if (indicator) indicator.remove();
+  
+  updateHomeForFocus('all');
+}
+
+function showWelcomeScreen() {
+  localStorage.removeItem('dado_focus');
+  currentFocus = null;
+  
+  const welcomeScreen = document.getElementById('welcome-screen');
+  if (welcomeScreen) {
+    welcomeScreen.classList.remove('hidden');
+  }
+  
+  clearFocus();
+}
 
 function hideLoadingOverlay() {
   // Hilangkan loading overlay lebih cepat (300ms saja)

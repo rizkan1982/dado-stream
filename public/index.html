@@ -1,1364 +1,587 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
-<!-- DADO STREAM v2.0 - Redesigned Jan 5, 2026 -->
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-  <meta name="description" content="DADO STREAM - Platform streaming drama China, anime, dan baca komik terlengkap.">
-  <meta name="keywords" content="drama china, anime, komik, manhwa, manga, streaming">
-  <title>DADO STREAM - Pilih Duniamu</title>
+  <meta name="description"
+    content="DADO STREAM - Platform streaming drama China, anime, dan baca komik terlengkap. Nikmati ribuan konten hiburan gratis!">
+  <meta name="keywords" content="drama china, anime, komik, streaming, dado stream, dramabox, manga">
+  <meta name="author" content="DADO STREAM">
+  <title>DADO STREAM - Drama China, Anime & Komik</title>
 
-  <!-- PWA -->
+  <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#FF6B00">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DADO STREAM">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="DADO STREAM">
+  <meta name="msapplication-TileColor" content="#FF6B00">
+  <meta name="msapplication-TileImage" content="/dado.png">
+
+  <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json">
+  
+  <!-- Icons -->
   <link rel="icon" type="image/png" href="/dado.png">
   <link rel="apple-touch-icon" href="/dado.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/dado.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/dado.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/dado.png">
 
-  <!-- Fonts -->
+  <!-- Preload critical CSS -->
+  <link rel="preload" href="css/styles.css" as="style">
+  <link rel="preload" href="css/theme-orange.css" as="style">
+
+  <!-- Fonts - Load asynchronously for speed -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"
+    media="print" onload="this.media='all'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  </noscript>
 
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/theme-orange.css">
+  
   <!-- Adsterra Popunder -->
   <script src="https://pl28403014.effectivegatecpm.com/f2/48/ee/f248ee0218c1012a262b50791ac32e5a.js"></script>
-
-  <style>
-    :root {
-      --primary: #FF6B00;
-      --primary-dark: #E55A00;
-      --bg-dark: #0a0a0a;
-      --bg-card: #141414;
-      --bg-hover: #1a1a1a;
-      --text: #ffffff;
-      --text-muted: #888888;
-      --border: #222222;
-      --gradient: linear-gradient(135deg, #FF6B00 0%, #FF8533 100%);
-      
-      /* Category Colors */
-      --drama-color: #E91E63;
-      --anime-color: #9C27B0;
-      --manhwa-color: #00BCD4;
-      --manga-color: #4CAF50;
-      --film-color: #FF5722;
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-dark);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ==================== WELCOME SCREEN ==================== */
-    .welcome-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--bg-dark);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      transition: opacity 0.5s, visibility 0.5s;
-      overflow: hidden;
-    }
-
-    /* Background Particles */
-    .welcome-screen::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 20% 20%, rgba(255,107,0,0.15) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(156,39,176,0.15) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(0,188,212,0.1) 0%, transparent 50%);
-      animation: bgPulse 8s ease-in-out infinite;
-    }
-
-    @keyframes bgPulse {
-      0%, 100% { opacity: 0.5; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.1); }
-    }
-
-    .welcome-screen > * {
-      position: relative;
-      z-index: 1;
-    }
-
-    .welcome-screen.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .welcome-logo {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 20px;
-      animation: float 3s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-
-    .welcome-title {
-      font-size: 2.5rem;
-      font-weight: 900;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 10px;
-    }
-
-    .welcome-subtitle {
-      color: var(--text-muted);
-      font-size: 1rem;
-      margin-bottom: 40px;
-      text-align: center;
-    }
-
-    .welcome-question {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 30px;
-      text-align: center;
-    }
-
-    .category-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 15px;
-      width: 100%;
-      max-width: 600px;
-    }
-
-    .category-card {
-      background: var(--bg-card);
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      padding: 25px 15px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .category-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: var(--cat-color);
-      transform: scaleX(0);
-      transition: transform 0.3s;
-    }
-
-    .category-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      border-color: var(--cat-color);
-      box-shadow: 0 15px 50px rgba(0,0,0,0.6), 0 0 30px color-mix(in srgb, var(--cat-color) 30%, transparent);
-    }
-
-    .category-card:hover::before {
-      transform: scaleX(1);
-    }
-
-    .category-card:active {
-      transform: translateY(-3px) scale(0.98);
-    }
-
-    .category-card[data-category="drama"] { --cat-color: var(--drama-color); }
-    .category-card[data-category="anime"] { --cat-color: var(--anime-color); }
-    .category-card[data-category="manhwa"] { --cat-color: var(--manhwa-color); }
-    .category-card[data-category="manga"] { --cat-color: var(--manga-color); }
-    .category-card[data-category="film"] { --cat-color: var(--film-color); }
-
-    .category-icon {
-      font-size: 3rem;
-      margin-bottom: 10px;
-      display: block;
-    }
-
-    .category-name {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .category-desc {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 5px;
-    }
-
-    /* ==================== MAIN APP ==================== */
-    .app-container {
-      display: none;
-      min-height: 100vh;
-      flex-direction: column;
-    }
-
-    .app-container.active {
-      display: flex;
-    }
-
-    /* Header */
-    .app-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: rgba(10,10,10,0.95);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      padding: 0 15px;
-      gap: 15px;
-    }
-
-    .header-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .header-logo img {
-      width: 36px;
-      height: 36px;
-    }
-
-    .header-logo span {
-      font-weight: 800;
-      font-size: 1.1rem;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .header-search {
-      flex: 1;
-      max-width: 400px;
-      position: relative;
-    }
-
-    .header-search input {
-      width: 100%;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 25px;
-      padding: 10px 40px 10px 15px;
-      color: var(--text);
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.3s;
-    }
-
-    .header-search input:focus {
-      border-color: var(--primary);
-    }
-
-    .header-search button {
-      position: absolute;
-      right: 5px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--primary);
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* Category Tabs */
-    .category-tabs {
-      position: fixed;
-      top: 60px;
-      left: 0;
-      right: 0;
-      height: 50px;
-      background: var(--bg-dark);
-      border-bottom: 1px solid var(--border);
-      z-index: 999;
-      display: flex;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .category-tabs::-webkit-scrollbar {
-      display: none;
-    }
-
-    .tab-item {
-      flex: 0 0 auto;
-      padding: 0 20px;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      transition: all 0.3s;
-      white-space: nowrap;
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .tab-item:hover {
-      color: var(--text);
-      background: var(--bg-hover);
-    }
-
-    .tab-item.active {
-      color: var(--cat-color, var(--primary));
-      border-bottom-color: var(--cat-color, var(--primary));
-    }
-
-    .tab-item[data-tab="drama"] { --cat-color: var(--drama-color); }
-    .tab-item[data-tab="anime"] { --cat-color: var(--anime-color); }
-    .tab-item[data-tab="manhwa"] { --cat-color: var(--manhwa-color); }
-    .tab-item[data-tab="manga"] { --cat-color: var(--manga-color); }
-    .tab-item[data-tab="film"] { --cat-color: var(--film-color); }
-
-    .tab-icon {
-      font-size: 1.2rem;
-    }
-
-    /* Main Content Area */
-    .main-content {
-      margin-top: 110px;
-      padding: 20px;
-      min-height: calc(100vh - 110px);
-    }
-
-    /* Content Sections */
-    .content-section {
-      display: none;
-    }
-
-    .content-section.active {
-      display: block;
-    }
-
-    /* Section Header */
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .section-title .icon {
-      font-size: 1.3rem;
-    }
-
-    .see-all-btn {
-      color: var(--primary);
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    /* Sub Navigation */
-    .sub-nav {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      overflow-x: auto;
-      padding-bottom: 10px;
-    }
-
-    .sub-nav-btn {
-      padding: 8px 16px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.3s;
-    }
-
-    .sub-nav-btn:hover,
-    .sub-nav-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-
-    /* Content Grid */
-    .content-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 15px;
-    }
-
-    @media (min-width: 768px) {
-      .content-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 20px;
-      }
-    }
-
-    /* Content Card */
-    .content-card {
-      background: var(--bg-card);
-      border-radius: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.3s, box-shadow 0.3s;
-      position: relative;
-    }
-
-    .content-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
-
-    .card-image {
-      width: 100%;
-      aspect-ratio: 2/3;
-      object-fit: cover;
-      background: var(--bg-hover);
-    }
-
-    .card-badge {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      background: var(--primary);
-      color: white;
-    }
-
-    .card-info {
-      padding: 12px;
-    }
-
-    .card-title {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      line-height: 1.3;
-    }
-
-    .card-meta {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-top: 5px;
-    }
-
-    /* Loading */
-    .loading-spinner {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 40px;
-    }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Detail Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.9);
-      z-index: 2000;
-      display: none;
-      overflow-y: auto;
-    }
-
-    .modal-overlay.active {
-      display: block;
-    }
-
-    .modal-content {
-      min-height: 100%;
-      padding: 20px;
-      padding-top: 60px;
-    }
-
-    .modal-close {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      width: 40px;
-      height: 40px;
-      background: var(--bg-card);
-      border: none;
-      border-radius: 50%;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-      z-index: 2001;
-    }
-
-    .modal-back {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      padding: 10px 15px;
-      background: var(--bg-card);
-      border: none;
-      border-radius: 20px;
-      color: white;
-      font-size: 0.9rem;
-      cursor: pointer;
-      z-index: 2001;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    /* Video Player */
-    .video-container {
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto 20px;
-      aspect-ratio: 16/9;
-      background: #000;
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .video-container iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    /* Episode List */
-    .episode-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-      gap: 8px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .episode-btn {
-      padding: 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .episode-btn:hover,
-    .episode-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-    }
-
-    /* Reader (Komik) */
-    .reader-container {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .reader-container img {
-      width: 100%;
-      display: block;
-    }
-
-    .chapter-nav {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 20px;
-      position: sticky;
-      bottom: 0;
-      background: rgba(10,10,10,0.95);
-    }
-
-    .chapter-nav button {
-      padding: 12px 24px;
-      background: var(--primary);
-      border: none;
-      border-radius: 25px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .chapter-nav button:disabled {
-      background: var(--bg-card);
-      color: var(--text-muted);
-      cursor: not-allowed;
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      .welcome-title {
-        font-size: 1.8rem;
-      }
-      
-      .category-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      
-      .header-logo span {
-        display: none;
-      }
-      
-      .header-search {
-        max-width: none;
-      }
-    }
-
-    /* Footer Info */
-    .footer-info {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-
-    .footer-info a {
-      color: var(--primary);
-      text-decoration: none;
-    }
-  </style>
 </head>
 
 <body>
-  <!-- Welcome Screen -->
-  <div class="welcome-screen" id="welcome-screen">
-    <img src="/dado.png" alt="DADO" class="welcome-logo">
-    <h1 class="welcome-title">DADO STREAM</h1>
-    <p class="welcome-subtitle">Platform Hiburan Terlengkap</p>
-    
-    <!-- Continue Watching (shown if has history) -->
-    <div class="continue-watching" id="continue-watching" style="display:none;">
-      <p style="color:#888;margin-bottom:15px;font-size:0.9rem;">Lanjutkan Menonton:</p>
-      <div id="continue-items" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:30px;"></div>
-    </div>
-    
-    <p class="welcome-question">Mau fokus ke mana hari ini?</p>
-    
-    <div class="category-grid">
-      <div class="category-card" data-category="drama" onclick="selectCategory('drama')">
-        <span class="category-icon">🎬</span>
-        <div class="category-name">Drama</div>
-        <div class="category-desc">Drama China & Korea</div>
+  <!-- Welcome Screen (First Visit) -->
+  <div id="welcome-screen" class="welcome-screen">
+    <div class="welcome-content">
+      <img src="/dado.png" alt="DADO" class="welcome-logo">
+      <h1 class="welcome-title">DADO STREAM</h1>
+      <p class="welcome-subtitle">Platform Hiburan Terlengkap</p>
+      <p class="welcome-question">Mau fokus ke mana hari ini?</p>
+      
+      <div class="category-grid">
+        <div class="category-card" onclick="selectFocus('drama')">
+          <span class="cat-icon">🎬</span>
+          <span class="cat-name">Drama</span>
+          <span class="cat-desc">Drama China & Korea</span>
+        </div>
+        <div class="category-card" onclick="selectFocus('anime')">
+          <span class="cat-icon">⚔️</span>
+          <span class="cat-name">Anime</span>
+          <span class="cat-desc">Anime Jepang</span>
+        </div>
+        <div class="category-card" onclick="selectFocus('komik')">
+          <span class="cat-icon">📚</span>
+          <span class="cat-name">Komik</span>
+          <span class="cat-desc">Manhwa & Manga</span>
+        </div>
+        <div class="category-card" onclick="selectFocus('all')">
+          <span class="cat-icon">🌟</span>
+          <span class="cat-name">Semua</span>
+          <span class="cat-desc">Lihat Semuanya</span>
+        </div>
       </div>
       
-      <div class="category-card" data-category="anime" onclick="selectCategory('anime')">
-        <span class="category-icon">⚔️</span>
-        <div class="category-name">Anime</div>
-        <div class="category-desc">Anime Jepang</div>
-      </div>
-      
-      <div class="category-card" data-category="manhwa" onclick="selectCategory('manhwa')">
-        <span class="category-icon">🇰🇷</span>
-        <div class="category-name">Manhwa</div>
-        <div class="category-desc">Komik Korea</div>
-      </div>
-      
-      <div class="category-card" data-category="manga" onclick="selectCategory('manga')">
-        <span class="category-icon">🇯🇵</span>
-        <div class="category-name">Manga</div>
-        <div class="category-desc">Komik Jepang</div>
-      </div>
+      <p class="welcome-skip" onclick="selectFocus('all')">Lewati & Lihat Semua →</p>
     </div>
   </div>
 
-  <!-- Main App -->
-  <div class="app-container" id="app-container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="header-logo" onclick="goToWelcome()">
-        <img src="/dado.png" alt="DADO">
-        <span>DADO STREAM</span>
-      </div>
-      
-      <div class="header-search">
-        <input type="text" id="search-input" placeholder="Cari konten...">
-        <button onclick="performSearch()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loader">
+      <div class="loader-ring"></div>
+      <div class="loader-ring"></div>
+      <div class="loader-ring"></div>
+      <span class="loader-text">DADO STREAM</span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="header">
+    <div class="nav-top">
+      <!-- Hamburger Menu Button -->
+      <button class="hamburger-btn" id="hamburger-btn" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Logo Text Only - Centered -->
+      <a href="#" class="nav-logo-center" onclick="goHome(); return false;">
+        <span class="logo-text-center">DADO STREAM</span>
+      </a>
+
+      <!-- Search Icon (Mobile) / Search Bar (Desktop) -->
+      <div class="nav-right">
+        <button class="search-icon-btn" onclick="toggleSearchBar()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
           </svg>
         </button>
       </div>
-    </header>
+    </div>
 
-    <!-- Category Tabs -->
-    <nav class="category-tabs">
-      <div class="tab-item" data-tab="drama" onclick="switchTab('drama')">
-        <span class="tab-icon">🎬</span>
-        <span>Drama</span>
-      </div>
-      <div class="tab-item" data-tab="anime" onclick="switchTab('anime')">
-        <span class="tab-icon">⚔️</span>
-        <span>Anime</span>
-      </div>
-      <div class="tab-item" data-tab="manhwa" onclick="switchTab('manhwa')">
-        <span class="tab-icon">🇰🇷</span>
-        <span>Manhwa</span>
-      </div>
-      <div class="tab-item" data-tab="manga" onclick="switchTab('manga')">
-        <span class="tab-icon">🇯🇵</span>
-        <span>Manga</span>
-      </div>
-    </nav>
+    <!-- Mobile Search Bar (Hidden by default) -->
+    <div class="mobile-search-bar" id="mobile-search-bar">
+      <input type="text" id="mobile-search-input" class="mobile-search-input" placeholder="Cari drama, anime, komik...">
+      <button class="mobile-search-submit" onclick="performMobileSearch()">Cari</button>
+      <button class="mobile-search-close" onclick="toggleSearchBar()">✕</button>
+    </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Drama Section -->
-      <section class="content-section" id="drama-section">
+    <!-- Desktop Search (hidden on mobile) -->
+    <div class="desktop-search">
+      <div class="search-wrapper">
+        <input type="text" id="search-input" class="search-input" placeholder="Cari drama, anime, komik...">
+        <button class="search-btn" onclick="performSearch()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Sidebar Menu -->
+  <div class="mobile-menu-overlay" id="mobile-menu-overlay" onclick="toggleMobileMenu()"></div>
+  <nav class="mobile-menu" id="mobile-menu">
+    <div class="mobile-menu-header">
+      <img src="/dado.png" alt="DADO" class="mobile-menu-logo">
+      <span>DADO STREAM</span>
+    </div>
+    <ul class="mobile-menu-list">
+      <li><a href="#" class="mobile-menu-link active" data-section="home">🏠 Rekomendasi</a></li>
+      <li><a href="#" class="mobile-menu-link" data-section="drama">🎬 Drama</a></li>
+      <li><a href="#" class="mobile-menu-link" data-category="dubindo">🇮🇩 Indo Dub</a></li>
+      <li><a href="#" class="mobile-menu-link" data-section="anime">⚔️ Anime</a></li>
+      <li><a href="#" class="mobile-menu-link" data-section="komik">📚 Komik</a></li>
+      <li><a href="#" class="mobile-menu-link" data-category="trending">🔥 Trending</a></li>
+      <li><a href="#" class="mobile-menu-link" data-category="foryou">❤️ For You</a></li>
+      <li style="border-top: 1px solid #333; margin-top: 10px; padding-top: 10px;">
+        <a href="#" class="mobile-menu-link" onclick="showWelcomeScreen(); toggleMobileMenu(); return false;">🎯 Ganti Fokus</a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <!-- Home Section -->
+    <section id="home-section" class="section active">
+      <!-- Hero Section -->
+      <div class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content container">
+          <h1 class="hero-title">
+            <span class="gradient-text">DADO STREAM</span>
+            <br>Platform Hiburan Terlengkap
+          </h1>
+          <p class="hero-subtitle">Nikmati drama China, anime terbaru, dan komik populer dalam satu platform. Streaming
+            gratis tanpa batas!</p>
+          <div class="hero-buttons">
+            <button class="btn btn-primary btn-glow" onclick="navigateTo('drama')">
+              <span>🎬</span> Mulai Nonton
+            </button>
+            <button class="btn btn-secondary" onclick="navigateTo('komik')">
+              <span>📖</span> Baca Komik
+            </button>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="stat-number">1000+</span>
+              <span class="stat-label">Drama</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">500+</span>
+              <span class="stat-label">Anime</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">2000+</span>
+              <span class="stat-label">Komik</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured Section -->
+      <div class="container section-container">
         <div class="section-header">
-          <h2 class="section-title"><span class="icon">🎬</span> Drama</h2>
+          <h2 class="section-title">
+            <span class="title-icon">🔥</span>
+            Drama Terbaru
+          </h2>
+          <a href="#" class="see-all" onclick="navigateTo('drama')">Lihat Semua →</a>
         </div>
-        
-        <div class="sub-nav">
-          <button class="sub-nav-btn active" data-filter="latest">Terbaru</button>
-          <button class="sub-nav-btn" data-filter="trending">Trending</button>
-          <button class="sub-nav-btn" data-filter="dubindo">Dub Indo</button>
-          <button class="sub-nav-btn" data-filter="vip">VIP</button>
+        <div class="content-grid" id="home-drama-grid">
+          <div class="skeleton-loader"></div>
         </div>
-        
+      </div>
+
+      <!-- Adsterra Native Banner -->
+      <div class="container" style="margin: 20px auto; padding: 0 15px;">
+        <script async="async" data-cfasync="false" src="https://pl28403034.effectivegatecpm.com/ebbbe73e25be8893e3d2fec6992015fa/invoke.js"></script>
+        <div id="container-ebbbe73e25be8893e3d2fec6992015fa"></div>
+      </div>
+
+      <div class="container section-container">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="title-icon">⭐</span>
+            Anime Populer
+          </h2>
+          <a href="#" class="see-all" onclick="navigateTo('anime')">Lihat Semua →</a>
+        </div>
+        <div class="content-grid" id="home-anime-grid">
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+
+      <div class="container section-container">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="title-icon">📖</span>
+            Komik Rekomendasi
+          </h2>
+          <a href="#" class="see-all" onclick="navigateTo('komik')">Lihat Semua →</a>
+        </div>
+        <div class="content-grid" id="home-komik-grid">
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Drama Section -->
+    <section id="drama-section" class="section">
+      <div class="container section-container">
+        <div class="page-header">
+          <h1 class="page-title gradient-text">📺 Drama China</h1>
+          <p class="page-subtitle">Koleksi drama China terlengkap dengan subtitle Indonesia</p>
+        </div>
+
+        <!-- Drama Categories -->
+        <div class="category-tabs">
+          <button class="category-tab active" data-category="latest"
+            onclick="loadDramaCategory('latest')">Terbaru</button>
+          <button class="category-tab" data-category="trending"
+            onclick="loadDramaCategory('trending')">Trending</button>
+          <button class="category-tab" data-category="vip" onclick="loadDramaCategory('vip')">VIP</button>
+          <button class="category-tab" data-category="foryou" onclick="loadDramaCategory('foryou')">Untuk Kamu</button>
+          <button class="category-tab" data-category="dubindo" onclick="loadDramaCategory('dubindo')">Dub Indo</button>
+        </div>
+
         <div class="content-grid" id="drama-grid">
-          <div class="loading-spinner"><div class="spinner"></div></div>
+          <div class="skeleton-loader"></div>
         </div>
-      </section>
-
-      <!-- Anime Section -->
-      <section class="content-section" id="anime-section">
-        <div class="section-header">
-          <h2 class="section-title"><span class="icon">⚔️</span> Anime</h2>
-        </div>
-        
-        <div class="sub-nav">
-          <button class="sub-nav-btn active" data-filter="ongoing">On-Going</button>
-          <button class="sub-nav-btn" data-filter="completed">Completed</button>
-          <button class="sub-nav-btn" data-filter="popular">Populer</button>
-        </div>
-        
-        <div class="content-grid" id="anime-grid">
-          <div class="loading-spinner"><div class="spinner"></div></div>
-        </div>
-      </section>
-
-      <!-- Manhwa Section -->
-      <section class="content-section" id="manhwa-section">
-        <div class="section-header">
-          <h2 class="section-title"><span class="icon">🇰🇷</span> Manhwa</h2>
-        </div>
-        
-        <div class="sub-nav">
-          <button class="sub-nav-btn active" data-filter="latest">Terbaru</button>
-          <button class="sub-nav-btn" data-filter="popular">Populer</button>
-          <button class="sub-nav-btn" data-filter="action">Action</button>
-          <button class="sub-nav-btn" data-filter="romance">Romance</button>
-        </div>
-        
-        <div class="content-grid" id="manhwa-grid">
-          <div class="loading-spinner"><div class="spinner"></div></div>
-        </div>
-      </section>
-
-      <!-- Manga Section -->
-      <section class="content-section" id="manga-section">
-        <div class="section-header">
-          <h2 class="section-title"><span class="icon">🇯🇵</span> Manga</h2>
-        </div>
-        
-        <div class="sub-nav">
-          <button class="sub-nav-btn active" data-filter="latest">Terbaru</button>
-          <button class="sub-nav-btn" data-filter="popular">Populer</button>
-          <button class="sub-nav-btn" data-filter="action">Action</button>
-          <button class="sub-nav-btn" data-filter="romance">Romance</button>
-        </div>
-        
-        <div class="content-grid" id="manga-grid">
-          <div class="loading-spinner"><div class="spinner"></div></div>
-        </div>
-      </section>
-
-      <!-- Footer -->
-      <div class="footer-info">
-        <p>© 2026 DADO STREAM. Semua konten dari sumber pihak ketiga.</p>
-        <p><a href="#" onclick="showAbout()">Tentang Kami</a> • <a href="https://wa.me/6281234567890">Kontak</a></p>
       </div>
-    </main>
-  </div>
+    </section>
 
-  <!-- Detail Modal -->
-  <div class="modal-overlay" id="detail-modal">
-    <button class="modal-back" onclick="closeModal()">← Kembali</button>
-    <button class="modal-close" onclick="closeModal()">×</button>
-    <div class="modal-content" id="modal-content">
-      <!-- Dynamic content here -->
+    <!-- Anime Section -->
+    <section id="anime-section" class="section">
+      <div class="container section-container">
+        <div class="page-header">
+          <h1 class="page-title gradient-text">🎌 Anime</h1>
+          <p class="page-subtitle">Nonton anime terbaru subtitle Indonesia</p>
+        </div>
+
+        <div class="category-tabs">
+          <button class="category-tab active" data-category="latest"
+            onclick="loadAnimeCategory('latest')">Terbaru</button>
+          <button class="category-tab" data-category="trending"
+            onclick="loadAnimeCategory('trending')">Trending</button>
+          <button class="category-tab" data-category="popular" onclick="loadAnimeCategory('popular')">Populer</button>
+          <button class="category-tab" data-category="movie" onclick="loadAnimeCategory('movie')">Movie</button>
+        </div>
+
+        <div class="content-grid" id="anime-grid">
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Komik Section -->
+    <section id="komik-section" class="section">
+      <div class="container section-container">
+        <div class="page-header">
+          <h1 class="page-title gradient-text">📚 Komik</h1>
+          <p class="page-subtitle">Baca komik favorit kamu secara gratis</p>
+        </div>
+
+        <div class="category-tabs">
+          <button class="category-tab active" data-category="recommended"
+            onclick="loadKomikCategory('recommended')">Rekomendasi</button>
+          <button class="category-tab" data-category="popular" onclick="loadKomikCategory('popular')">Populer</button>
+        </div>
+
+        <div class="content-grid" id="komik-grid">
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Results Section -->
+    <section id="search-section" class="section">
+      <div class="container section-container">
+        <div class="page-header">
+          <h1 class="page-title gradient-text">🔍 Hasil Pencarian</h1>
+          <p class="page-subtitle" id="search-query-text"></p>
+        </div>
+
+        <div class="search-results-tabs">
+          <button class="category-tab active" data-search="drama" onclick="showSearchTab('drama')">Drama</button>
+          <button class="category-tab" data-search="anime" onclick="showSearchTab('anime')">Anime</button>
+          <button class="category-tab" data-search="komik" onclick="showSearchTab('komik')">Komik</button>
+        </div>
+
+        <div id="search-drama-results" class="search-tab-content active">
+          <h3 class="search-category-title">Drama</h3>
+          <div class="content-grid" id="search-drama-grid"></div>
+        </div>
+        <div id="search-anime-results" class="search-tab-content">
+          <h3 class="search-category-title">Anime</h3>
+          <div class="content-grid" id="search-anime-grid"></div>
+        </div>
+        <div id="search-komik-results" class="search-tab-content">
+          <h3 class="search-category-title">Komik</h3>
+          <div class="content-grid" id="search-komik-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detail Section -->
+    <section id="detail-section" class="section">
+      <div class="container section-container">
+        <button class="back-btn" onclick="goBack()">
+          ← Kembali
+        </button>
+        <div id="detail-content">
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Player Section -->
+    <section id="player-section" class="section">
+      <div class="container section-container">
+        <button class="back-btn" onclick="goBack()">
+          ← Kembali
+        </button>
+        <div id="player-content">
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reader Section (Komik) -->
+    <section id="reader-section" class="section">
+      <div class="container section-container">
+        <button class="back-btn" onclick="goBack()">
+          ← Kembali
+        </button>
+        <div id="reader-content">
+          <div class="skeleton-loader"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+            <span style="font-size: 24px; font-weight: 800; color: #FF6B00;">DADO STREAM</span>
+          </div>
+          <p class="footer-desc">Platform streaming drama China, anime, dan baca komik terlengkap. Nikmati ribuan konten hiburan berkualitas tinggi, gratis tanpa iklan yang mengganggu.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-section">
+            <h4>Konten</h4>
+            <a href="#" onclick="navigateTo('drama'); return false;">Drama China</a>
+            <a href="#" onclick="navigateTo('anime'); return false;">Anime</a>
+            <a href="#" onclick="navigateTo('komik'); return false;">Komik</a>
+          </div>
+          <div class="footer-section">
+            <h4>Lainnya</h4>
+            <a href="#" onclick="showTentangKami(); return false;">Tentang Kami</a>
+            <a href="https://wa.me/6281945330179" target="_blank" rel="noopener">Kontak</a>
+            <a href="#" onclick="showFAQ(); return false;">FAQ</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 DADO STREAM. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div id="modal-body"></div>
     </div>
   </div>
 
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <!-- HLS.js for streaming support -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="js/app.js"></script>
+  
+  <!-- PWA Service Worker Registration -->
   <script>
-    // ==================== STATE ====================
-    let currentCategory = localStorage.getItem('dadoCategory') || null;
-    let currentFilter = 'latest';
-    let isLoading = false;
-
-    // ==================== INIT ====================
-    document.addEventListener('DOMContentLoaded', () => {
-      // Show continue watching if has history
-      loadContinueWatching();
-      
-      if (currentCategory) {
-        showApp(currentCategory);
-      }
-      
-      // Setup sub-nav clicks
-      document.querySelectorAll('.sub-nav-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const section = e.target.closest('.content-section');
-          section.querySelectorAll('.sub-nav-btn').forEach(b => b.classList.remove('active'));
-          e.target.classList.add('active');
-          currentFilter = e.target.dataset.filter;
-          loadContent(currentCategory, currentFilter);
-        });
-      });
-
-      // Search on enter
-      document.getElementById('search-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
-      });
+    // PWA Install prompt
+    let deferredPrompt;
+    const pwaBtn = document.getElementById('pwa-install-btn');
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (pwaBtn) pwaBtn.style.display = 'flex';
     });
-
-    // ==================== WATCH HISTORY ====================
-    function getWatchHistory() {
-      try {
-        return JSON.parse(localStorage.getItem('dado_history') || '[]');
-      } catch {
-        return [];
-      }
-    }
-
-    function saveToHistory(item) {
-      const history = getWatchHistory();
-      // Remove if exists
-      const filtered = history.filter(h => h.id !== item.id);
-      // Add to front
-      filtered.unshift({
-        ...item,
-        timestamp: Date.now()
-      });
-      // Keep only last 10
-      localStorage.setItem('dado_history', JSON.stringify(filtered.slice(0, 10)));
-    }
-
-    function loadContinueWatching() {
-      const history = getWatchHistory();
-      if (history.length === 0) return;
-      
-      const container = document.getElementById('continue-watching');
-      const items = document.getElementById('continue-items');
-      
-      container.style.display = 'block';
-      items.innerHTML = history.slice(0, 4).map(h => `
-        <div onclick="resumeWatching('${h.category}', '${h.id}')" style="
-          background:var(--bg-card);
-          border-radius:10px;
-          padding:10px 15px;
-          cursor:pointer;
-          display:flex;
-          align-items:center;
-          gap:10px;
-          transition:all 0.3s;
-        " onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='var(--bg-card)'">
-          <span style="font-size:1.2rem;">${getCategoryIcon(h.category)}</span>
-          <div>
-            <div style="font-size:0.85rem;font-weight:600;">${truncate(h.title, 20)}</div>
-            <div style="font-size:0.7rem;color:#888;">${h.episode || ''}</div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function getCategoryIcon(cat) {
-      const icons = { drama: '🎬', anime: '⚔️', manhwa: '🇰🇷', manga: '🇯🇵' };
-      return icons[cat] || '📺';
-    }
-
-    function truncate(str, len) {
-      return str.length > len ? str.substring(0, len) + '...' : str;
-    }
-
-    function resumeWatching(category, id) {
-      selectCategory(category);
-      setTimeout(() => openDetail(category, id), 500);
-    }
-
-    // ==================== NAVIGATION ====================
-    function selectCategory(category) {
-      localStorage.setItem('dadoCategory', category);
-      currentCategory = category;
-      showApp(category);
-    }
-
-    function showApp(category) {
-      document.getElementById('welcome-screen').classList.add('hidden');
-      document.getElementById('app-container').classList.add('active');
-      switchTab(category);
-    }
-
-    function goToWelcome() {
-      localStorage.removeItem('dadoCategory');
-      document.getElementById('welcome-screen').classList.remove('hidden');
-      document.getElementById('app-container').classList.remove('active');
-    }
-
-    function switchTab(tab) {
-      currentCategory = tab;
-      
-      // Update tabs
-      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-      document.querySelector(`.tab-item[data-tab="${tab}"]`).classList.add('active');
-      
-      // Update sections
-      document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-      document.getElementById(`${tab}-section`).classList.add('active');
-      
-      // Load content
-      loadContent(tab, 'latest');
-    }
-
-    // ==================== CONTENT LOADING ====================
-    async function loadContent(category, filter = 'latest') {
-      if (isLoading) return;
-      isLoading = true;
-      
-      const grid = document.getElementById(`${category}-grid`);
-      grid.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-      
-      try {
-        let data = [];
-        
-        if (category === 'drama') {
-          data = await loadDrama(filter);
-        } else if (category === 'anime') {
-          data = await loadAnime(filter);
-        } else if (category === 'manhwa' || category === 'manga') {
-          data = await loadKomik(category, filter);
-        }
-        
-        renderGrid(grid, data, category);
-      } catch (error) {
-        console.error('Load error:', error);
-        grid.innerHTML = '<p style="text-align:center;color:#888;padding:40px;">Gagal memuat konten. Coba lagi.</p>';
-      }
-      
-      isLoading = false;
-    }
-
-    async function loadDrama(filter) {
-      const endpoints = {
-        'latest': '/api/dramabox/latest',
-        'trending': '/api/dramabox/trending',
-        'dubindo': '/api/dramabox/dubindo',
-        'vip': '/api/dramabox/vip'
-      };
-      
-      const res = await fetch(endpoints[filter] || endpoints.latest);
-      const data = await res.json();
-      return Array.isArray(data) ? data : (data.data || []);
-    }
-
-    async function loadAnime(filter) {
-      const endpoints = {
-        'ongoing': '/api/anime/ongoing',
-        'completed': '/api/anime/completed',
-        'popular': '/api/anime/popular'
-      };
-      
-      const res = await fetch(endpoints[filter] || endpoints.ongoing);
-      const data = await res.json();
-      return Array.isArray(data) ? data : (data.data || data.anime || []);
-    }
-
-    async function loadKomik(type, filter) {
-      // type: manhwa or manga
-      const provider = type === 'manhwa' ? 'asura' : 'shinigami';
-      const res = await fetch(`/api/komik/latest?provider=${provider}`);
-      const data = await res.json();
-      return Array.isArray(data) ? data : (data.data || []);
-    }
-
-    function renderGrid(grid, items, category) {
-      if (!items || items.length === 0) {
-        grid.innerHTML = '<p style="text-align:center;color:#888;padding:40px;">Tidak ada konten.</p>';
+    
+    function installPWA() {
+      if (!deferredPrompt) {
+        // Already installed or not supported - show manual instructions
+        alert('Untuk install app:\n\n📱 Android: Tap menu (⋮) → "Add to Home screen"\n🍎 iOS: Tap Share → "Add to Home Screen"\n💻 PC: Klik icon install di address bar');
         return;
       }
-      
-      grid.innerHTML = items.slice(0, 20).map(item => {
-        const title = item.title || item.name || item.drama_title || 'Untitled';
-        const image = item.cover || item.image || item.poster || item.thumbnail || '/dado.png';
-        const id = item.id || item.bookId || item.slug || item.endpoint;
-        const badge = item.episode ? `Ep ${item.episode}` : (item.chapter ? `Ch ${item.chapter}` : '');
-        
-        return `
-          <div class="content-card" onclick="openDetail('${category}', '${id}')">
-            <img class="card-image" src="${image}" alt="${title}" loading="lazy" onerror="this.src='/dado.png'">
-            ${badge ? `<span class="card-badge">${badge}</span>` : ''}
-            <div class="card-info">
-              <div class="card-title">${title}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // ==================== DETAIL & PLAYER ====================
-    async function openDetail(category, id) {
-      const modal = document.getElementById('detail-modal');
-      const content = document.getElementById('modal-content');
-      
-      modal.classList.add('active');
-      content.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-      
-      try {
-        if (category === 'drama') {
-          await loadDramaDetail(id, content);
-        } else if (category === 'anime') {
-          await loadAnimeDetail(id, content);
-        } else {
-          await loadKomikDetail(category, id, content);
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((result) => {
+        if (result.outcome === 'accepted') {
+          console.log('[PWA] App installed');
         }
-      } catch (error) {
-        content.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Gagal memuat detail.</p>';
-      }
-    }
-
-    async function loadDramaDetail(bookId, container) {
-      const res = await fetch(`/api/dramabox/detail?bookId=${bookId}`);
-      const data = await res.json();
-      const detail = data.data || data;
-      
-      // Save to history
-      saveToHistory({
-        id: bookId,
-        title: detail.title || detail.name,
-        category: 'drama',
-        cover: detail.cover || detail.poster
+        deferredPrompt = null;
+        if (pwaBtn) pwaBtn.style.display = 'none';
       });
-      
-      const episodes = detail.episodes || detail.episodeList || [];
-      
-      container.innerHTML = `
-        <div style="max-width:900px;margin:0 auto;">
-          <h2 style="margin-bottom:15px;font-size:1.5rem;">${detail.title || detail.name}</h2>
-          <p style="color:#888;margin-bottom:20px;">${detail.description || detail.synopsis || ''}</p>
-          
-          <div class="video-container" id="video-player">
-            <p style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;">
-              Pilih episode untuk mulai menonton
-            </p>
-          </div>
-          
-          <h3 style="margin:20px 0 15px;">Episodes (${episodes.length})</h3>
-          <div class="episode-grid">
-            ${episodes.map((ep, i) => `
-              <button class="episode-btn" onclick="playDramaEpisode('${bookId}', ${ep.id || ep.episodeId || i+1}, this, '${(detail.title || '').replace(/'/g, '')}')">
-                ${ep.episode || ep.title || i+1}
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `;
     }
-
-    async function playDramaEpisode(bookId, episodeId, btn, title) {
-      // Update active button
-      document.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      // Update history with episode info
-      saveToHistory({
-        id: bookId,
-        title: title || 'Drama',
-        category: 'drama',
-        episode: `Ep ${btn.textContent.trim()}`
+    
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] App successfully installed');
+      if (pwaBtn) pwaBtn.style.display = 'none';
+      deferredPrompt = null;
+    });
+    
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('[SW] Registered:', reg.scope))
+          .catch(err => console.error('[SW] Registration failed:', err));
       });
-      
-      const player = document.getElementById('video-player');
-      player.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-      
-      try {
-        const res = await fetch(`/api/dramabox/episode?bookId=${bookId}&episodeId=${episodeId}`);
-        const data = await res.json();
-        const videoUrl = data.url || data.video || data.stream;
-        
-        if (videoUrl) {
-          // Use proxy for video
-          const proxyUrl = `/api/video-proxy?url=${encodeURIComponent(videoUrl)}`;
-          player.innerHTML = `<video controls autoplay style="width:100%;height:100%;" src="${proxyUrl}"></video>`;
-        } else {
-          player.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Video tidak tersedia</p>';
-        }
-      } catch (error) {
-        player.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Gagal memuat video</p>';
-      }
     }
-
-    async function loadAnimeDetail(id, container) {
-      const res = await fetch(`/api/anime/detail?id=${id}`);
-      const data = await res.json();
-      const detail = data.data || data;
-      
-      const episodes = detail.episodes || detail.episodeList || [];
-      
-      container.innerHTML = `
-        <div style="max-width:900px;margin:0 auto;">
-          <h2 style="margin-bottom:15px;font-size:1.5rem;">${detail.title || detail.name}</h2>
-          <p style="color:#888;margin-bottom:20px;">${detail.synopsis || detail.description || ''}</p>
-          
-          <div class="video-container" id="video-player">
-            <p style="display:flex;align-items:center;justify-content:center;height:100%;color:#888;">
-              Pilih episode untuk mulai menonton
-            </p>
-          </div>
-          
-          <h3 style="margin:20px 0 15px;">Episodes (${episodes.length})</h3>
-          <div class="episode-grid">
-            ${episodes.map((ep, i) => `
-              <button class="episode-btn" onclick="playAnimeEpisode('${ep.id || ep.endpoint || i}', this)">
-                ${ep.episode || ep.title || i+1}
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `;
+    
+    // Show install button if not already installed
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+      console.log('[PWA] Running as installed app');
+    } else if (pwaBtn) {
+      // Show button for manual install
+      pwaBtn.style.display = 'flex';
     }
-
-    async function playAnimeEpisode(episodeId, btn) {
-      document.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      const player = document.getElementById('video-player');
-      player.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-      
-      try {
-        const res = await fetch(`/api/anime/watch?id=${episodeId}`);
-        const data = await res.json();
-        const sources = data.sources || data.data?.sources || [];
-        
-        if (sources.length > 0) {
-          const videoUrl = sources[0].url || sources[0].src;
-          player.innerHTML = `<iframe src="${videoUrl}" allowfullscreen></iframe>`;
-        } else {
-          player.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Video tidak tersedia</p>';
-        }
-      } catch (error) {
-        player.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Gagal memuat video</p>';
-      }
-    }
-
-    async function loadKomikDetail(type, id, container) {
-      const provider = type === 'manhwa' ? 'asura' : 'shinigami';
-      const res = await fetch(`/api/komik/detail?id=${id}&provider=${provider}`);
-      const data = await res.json();
-      const detail = data.data || data;
-      
-      const chapters = detail.chapters || detail.chapterList || [];
-      
-      container.innerHTML = `
-        <div style="max-width:900px;margin:0 auto;">
-          <h2 style="margin-bottom:15px;font-size:1.5rem;">${detail.title || detail.name}</h2>
-          <p style="color:#888;margin-bottom:20px;">${detail.synopsis || detail.description || ''}</p>
-          
-          <div class="reader-container" id="reader-container">
-            <p style="text-align:center;padding:40px;color:#888;">Pilih chapter untuk mulai membaca</p>
-          </div>
-          
-          <h3 style="margin:20px 0 15px;">Chapters (${chapters.length})</h3>
-          <div class="episode-grid">
-            ${chapters.slice(0, 50).map((ch, i) => `
-              <button class="episode-btn" onclick="readChapter('${ch.id || ch.endpoint || i}', '${provider}', this)">
-                ${ch.chapter || ch.title || i+1}
-              </button>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
-
-    async function readChapter(chapterId, provider, btn) {
-      document.querySelectorAll('.episode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      
-      const reader = document.getElementById('reader-container');
-      reader.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-      
-      try {
-        const res = await fetch(`/api/komik/read?id=${chapterId}&provider=${provider}`);
-        const data = await res.json();
-        const images = data.images || data.data?.images || data.pages || [];
-        
-        if (images.length > 0) {
-          reader.innerHTML = images.map(img => {
-            const src = typeof img === 'string' ? img : (img.url || img.src);
-            return `<img src="${src}" loading="lazy" onerror="this.style.display='none'">`;
-          }).join('');
-        } else {
-          reader.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Gambar tidak tersedia</p>';
-        }
-      } catch (error) {
-        reader.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Gagal memuat chapter</p>';
-      }
-    }
-
-    function closeModal() {
-      document.getElementById('detail-modal').classList.remove('active');
-    }
-
-    // ==================== SEARCH ====================
-    async function performSearch() {
-      const query = document.getElementById('search-input').value.trim();
-      if (!query) return;
-      
-      const grid = document.getElementById(`${currentCategory}-grid`);
-      grid.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
-      
-      try {
-        let data = [];
-        
-        if (currentCategory === 'drama') {
-          const res = await fetch(`/api/dramabox/search?q=${encodeURIComponent(query)}`);
-          data = await res.json();
-        } else if (currentCategory === 'anime') {
-          const res = await fetch(`/api/anime/search?q=${encodeURIComponent(query)}`);
-          data = await res.json();
-        } else {
-          const provider = currentCategory === 'manhwa' ? 'asura' : 'shinigami';
-          const res = await fetch(`/api/komik/search?q=${encodeURIComponent(query)}&provider=${provider}`);
-          data = await res.json();
-        }
-        
-        const items = Array.isArray(data) ? data : (data.data || data.results || []);
-        renderGrid(grid, items, currentCategory);
-      } catch (error) {
-        grid.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Pencarian gagal.</p>';
-      }
-    }
-
-    // ==================== UTILS ====================
-    function showAbout() {
-      alert('DADO STREAM - Platform Hiburan Terlengkap\n\nSemua konten berasal dari sumber pihak ketiga.');
-    }
-
-    // ==================== ANALYTICS ====================
+  </script>
+  
+  <!-- Analytics Tracking Script -->
+  <script>
     (function() {
+      // Generate or get session ID
       let sessionId = localStorage.getItem('dado_session_id');
       if (!sessionId) {
         sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('dado_session_id', sessionId);
       }
 
+      // Get device info
       function getDeviceInfo() {
         const ua = navigator.userAgent;
-        let device = 'Desktop', browser = 'Unknown', os = 'Unknown';
-        if (/Mobile|Android|iPhone|iPad/i.test(ua)) device = /iPad/i.test(ua) ? 'Tablet' : 'Mobile';
+        let device = 'Desktop';
+        let browser = 'Unknown';
+        let os = 'Unknown';
+
+        // Detect device
+        if (/Mobile|Android|iPhone|iPad/i.test(ua)) {
+          device = /iPad/i.test(ua) ? 'Tablet' : 'Mobile';
+        }
+
+        // Detect browser
         if (/Chrome/i.test(ua) && !/Edge|Edg/i.test(ua)) browser = 'Chrome';
         else if (/Firefox/i.test(ua)) browser = 'Firefox';
         else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
         else if (/Edge|Edg/i.test(ua)) browser = 'Edge';
+        else if (/Opera|OPR/i.test(ua)) browser = 'Opera';
+
+        // Detect OS
         if (/Windows/i.test(ua)) os = 'Windows';
         else if (/Mac/i.test(ua)) os = 'MacOS';
+        else if (/Linux/i.test(ua)) os = 'Linux';
         else if (/Android/i.test(ua)) os = 'Android';
         else if (/iOS|iPhone|iPad/i.test(ua)) os = 'iOS';
+
         return { device, browser, os };
       }
 
+      // Track event function
       async function trackEvent(eventType, data = {}) {
         try {
           const deviceInfo = getDeviceInfo();
           await fetch('/api/analytics/track', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ eventType, sessionId, page: window.location.pathname, ...deviceInfo, ...data })
+            body: JSON.stringify({
+              eventType,
+              sessionId,
+              page: window.location.pathname,
+              ...deviceInfo,
+              ...data,
+              timestamp: new Date().toISOString()
+            })
           });
-        } catch (e) {}
+        } catch (e) {
+          console.log('Track error:', e);
+        }
       }
 
+      // Track pageview on load
       trackEvent('pageview');
+
+      // Track navigation changes
+      let lastPage = window.location.pathname;
       setInterval(() => {
-        fetch('/api/analytics/heartbeat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId })
-        }).catch(() => {});
+        const currentPage = window.location.pathname + window.location.hash;
+        if (currentPage !== lastPage) {
+          lastPage = currentPage;
+          trackEvent('pageview', { page: currentPage });
+        }
+      }, 1000);
+
+      // Heartbeat to keep session alive (every 30 seconds)
+      setInterval(async () => {
+        try {
+          await fetch('/api/analytics/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId })
+          });
+        } catch (e) {}
       }, 30000);
+
+      // Track content views (expose globally)
+      window.trackContentView = function(contentId, contentTitle, contentType) {
+        trackEvent(contentType === 'komik' ? 'read' : 'watch', {
+          contentId,
+          contentTitle,
+          contentType
+        });
+      };
+
+      console.log('[Analytics] Tracking initialized');
     })();
   </script>
-
+  
   <!-- Adsterra Social Bar -->
-  <script src="https://pl28403078.effectivegatecpm.com/cd/97/8b/cd978b183b99fc7e6a7c47103f2b6200.js"></script>
+  <script src="https://pl28403030.effectivegatecpm.com/76/ea/39/76ea39059560fa1b5f44fa42ae5d454b.js"></script>
 </body>
+
 </html>
