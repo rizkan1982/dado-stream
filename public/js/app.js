@@ -95,6 +95,12 @@ function getProxyVideoUrl(url) {
   if (!url) return '';
   if (url.includes('localhost') || url.startsWith('/') || url.startsWith('data:')) return url;
   
+  // NEVER proxy embed/iframe URLs - they MUST be used directly
+  // These include: filedon.co/embed, backup blogspot, wibuu.info/stream, etc
+  if (url.includes('/embed') || url.includes('embed.php') || url.includes('stream') || url.includes('iframe')) {
+    return url; // Use directly for embeds
+  }
+  
   // DramaBox videos work directly without needing proxy (they're CORS-enabled)
   // Also they're too large (50-100MB) for Vercel's 4.5MB response limit
   if (url.includes('dramabox') || url.includes('hwztakavideo') || url.includes('hwztvideo')) {
@@ -117,6 +123,11 @@ function getProxyVideoUrl(url) {
   // For video files, most are too large - just return as-is
   if (url.endsWith('.mp4') || url.endsWith('.m3u8') || url.endsWith('.webm')) {
     return url; // Direct video files - too large to proxy
+  }
+  
+  // For filedon, pixeldrain, etc - these are embed services, use directly
+  if (url.includes('filedon.co') || url.includes('pixeldrain') || url.includes('drive.google')) {
+    return url; // Use directly
   }
   
   // For other URLs (streaming services, etc), try proxy but expect it might fail
@@ -159,11 +170,15 @@ function checkWelcomeScreen() {
   const welcomeScreen = document.getElementById('welcome-screen');
   if (!welcomeScreen) return;
   
-  // If user has already selected a focus, skip welcome screen
-  if (currentFocus) {
+  // If user has already selected a focus, skip welcome screen and show content
+  if (currentFocus && currentFocus !== 'all') {
     welcomeScreen.classList.add('hidden');
     applyFocusMode(currentFocus);
+  } else if (currentFocus === 'all') {
+    // User chose "Semua" - hide welcome screen but don't filter
+    welcomeScreen.classList.add('hidden');
   }
+  // else: first visit, welcome screen stays visible (no hidden class added)
 }
 
 function selectFocus(focus) {
@@ -1068,13 +1083,20 @@ async function showAnimeDetail(animeId, pushHistory = true) {
 function renderAnimeDetail(detail) {
   const container = document.getElementById('detail-content');
 
-  const genres = detail.genre || detail.genres || [];
-  const genresHtml = genres.map(genre =>
-    `<span class="detail-tag">${genre}</span>`
-  ).join('');
+  const genres = detail.genre || detail.genres || detail.genreList || [];
+  const genresHtml = genres.map(genre => {
+    const genreText = typeof genre === 'string' ? genre : (genre.title || genre.name || genre);
+    return `<span class="detail-tag">${genreText}</span>`;
+  }).join('');
 
-  const totalEp = detail.episodes?.length || detail.total_episode || '?';
-  const coverUrl = getProxyImageUrl(detail.cover_image_url || detail.cover || detail.image);
+  const totalEp = detail.episodes?.length || detail.total_episode || detail.totalEpisodes || '?';
+  const coverUrl = getProxyImageUrl(detail.cover_image_url || detail.cover || detail.image || detail.poster || detail.thumbnail_url);
+
+  // Title fallback chain
+  const title = detail.judul || detail.title || detail.judul_jp || 'Untitled';
+  
+  // Synopsis fallback chain
+  const synopsis = detail.sinopsis || detail.synopsis || detail.description || detail.plot || 'Tidak ada sinopsis.';
 
   // Render episodes list
   let chapters = state.currentEpisodes || [];
@@ -1082,7 +1104,7 @@ function renderAnimeDetail(detail) {
 
   const episodesHtml = chapters.map((ch, idx) => {
     let chTitle = ch.judul || ch.title || `Episode ${ch.episode || idx + 1}`;
-    let chUrlId = ch.urlId || ch.id || ch.url || "";
+    let chUrlId = ch.urlId || ch.id || ch.url || ch.chapterUrlId || "";
     if (typeof ch === 'string' && ch.includes('url=')) {
       // Parse pseudo-JSON strings like "@{id=...; ch=...; url=...}"
       const urlMatch = ch.match(/url=([^;]+)/);
@@ -1093,7 +1115,7 @@ function renderAnimeDetail(detail) {
 
     return `
       <button class="episode-btn" 
-              onclick="playAnimeEpisode('${chUrlId}', '${chTitle}', '${detail.judul || detail.title}')">
+              onclick="playAnimeEpisode('${chUrlId}', '${chTitle}', '${title}')">
         ${chTitle}
       </button>
     `;
@@ -1102,18 +1124,18 @@ function renderAnimeDetail(detail) {
   container.innerHTML = `
     <div class="detail-wrapper">
       <div class="detail-poster">
-        <img src="${coverUrl}" alt="${detail.judul || detail.title}" onerror="handleImageError(this)">
+        <img src="${coverUrl}" alt="${title}" onerror="handleImageError(this)">
       </div>
       <div class="detail-info">
-        <h1 class="detail-title">${detail.judul || detail.title}</h1>
+        <h1 class="detail-title">${title}</h1>
         <div class="detail-meta">
           <span class="detail-meta-item">📺 ${totalEp} Episode</span>
-          <span class="detail-meta-item">⭐ ${detail.score || 'N/A'}</span>
+          <span class="detail-meta-item">⭐ ${detail.score || detail.rating || 'N/A'}</span>
           <span class="detail-meta-item">📊 ${detail.status || 'Unknown'}</span>
           ${detail.studio ? `<span class="detail-meta-item">🎬 ${detail.studio}</span>` : ''}
-          ${detail.rilis ? `<span class="detail-meta-item">📅 ${detail.rilis}</span>` : ''}
+          ${detail.rilis || detail.releaseDate ? `<span class="detail-meta-item">📅 ${detail.rilis || detail.releaseDate}</span>` : ''}
         </div>
-        <p class="detail-synopsis">${detail.sinopsis || 'Tidak ada sinopsis.'}</p>
+        <p class="detail-synopsis">${synopsis}</p>
         <div class="detail-tags">${genresHtml}</div>
         
         <div class="episodes-container" style="margin-top: 30px;">
