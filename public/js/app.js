@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // Cache version - increment this to invalidate old cache
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3.1';
 
 // Clear old cache on version change
 (function() {
@@ -14,6 +14,8 @@ const CACHE_VERSION = 'v2';
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('api_')) localStorage.removeItem(key);
     });
+    // Also clear dado_focus to force welcome screen on major updates
+    // localStorage.removeItem('dado_focus'); // Uncomment this line if you want to reset focus
     // Clear sessionStorage
     sessionStorage.clear();
     localStorage.setItem('cache_version', CACHE_VERSION);
@@ -168,29 +170,53 @@ let currentFocus = localStorage.getItem('dado_focus') || null;
 
 function checkWelcomeScreen() {
   const welcomeScreen = document.getElementById('welcome-screen');
+  const mainContent = document.getElementById('main-content');
   if (!welcomeScreen) return;
   
+  console.log('[Welcome] Checking focus:', currentFocus);
+  
   // If user has already selected a focus, skip welcome screen and show content
-  if (currentFocus && currentFocus !== 'all') {
+  if (currentFocus && currentFocus !== '') {
     welcomeScreen.classList.add('hidden');
-    applyFocusMode(currentFocus);
-  } else if (currentFocus === 'all') {
-    // User chose "Semua" - hide welcome screen but don't filter
-    welcomeScreen.classList.add('hidden');
+    welcomeScreen.style.display = 'none';
+    if (mainContent) mainContent.style.visibility = 'visible';
+    if (currentFocus !== 'all') {
+      applyFocusMode(currentFocus);
+    }
+  } else {
+    // FIRST VISIT: Force welcome screen to show and BLOCK content
+    console.log('[Welcome] First visit - showing welcome screen');
+    welcomeScreen.classList.remove('hidden');
+    welcomeScreen.style.display = 'flex';
+    welcomeScreen.style.opacity = '1';
+    welcomeScreen.style.visibility = 'visible';
+    if (mainContent) mainContent.style.visibility = 'hidden';
   }
-  // else: first visit, welcome screen stays visible (no hidden class added)
 }
 
 function selectFocus(focus) {
   currentFocus = focus;
   localStorage.setItem('dado_focus', focus);
   
+  console.log('[Welcome] User selected focus:', focus);
+  
   const welcomeScreen = document.getElementById('welcome-screen');
+  const mainContent = document.getElementById('main-content');
+  
   if (welcomeScreen) {
     welcomeScreen.classList.add('hidden');
+    welcomeScreen.style.display = 'none';
+    welcomeScreen.style.opacity = '0';
+    welcomeScreen.style.visibility = 'hidden';
   }
   
-  applyFocusMode(focus);
+  if (mainContent) {
+    mainContent.style.visibility = 'visible';
+  }
+  
+  if (focus !== 'all') {
+    applyFocusMode(focus);
+  }
   
   // Auto-navigate to the focused section
   if (focus === 'drama') {
@@ -269,8 +295,17 @@ function showWelcomeScreen() {
   currentFocus = null;
   
   const welcomeScreen = document.getElementById('welcome-screen');
+  const mainContent = document.getElementById('main-content');
+  
   if (welcomeScreen) {
     welcomeScreen.classList.remove('hidden');
+    welcomeScreen.style.display = 'flex';
+    welcomeScreen.style.opacity = '1';
+    welcomeScreen.style.visibility = 'visible';
+  }
+  
+  if (mainContent) {
+    mainContent.style.visibility = 'hidden';
   }
   
   clearFocus();
@@ -1092,11 +1127,21 @@ function renderAnimeDetail(detail) {
   const totalEp = detail.episodes?.length || detail.total_episode || detail.totalEpisodes || '?';
   const coverUrl = getProxyImageUrl(detail.cover_image_url || detail.cover || detail.image || detail.poster || detail.thumbnail_url);
 
-  // Title fallback chain
-  const title = detail.judul || detail.title || detail.judul_jp || 'Untitled';
+  // Title fallback chain - check for empty strings too
+  const title = (detail.judul && detail.judul.trim()) || 
+                (detail.title && detail.title.trim()) || 
+                (detail.judul_jp && detail.judul_jp.trim()) || 
+                (detail.name && detail.name.trim()) ||
+                (detail.anime_title && detail.anime_title.trim()) ||
+                'Untitled';
   
-  // Synopsis fallback chain
-  const synopsis = detail.sinopsis || detail.synopsis || detail.description || detail.plot || 'Tidak ada sinopsis.';
+  // Synopsis fallback chain - check for empty strings too
+  const synopsis = (detail.sinopsis && detail.sinopsis.trim()) || 
+                   (detail.synopsis && detail.synopsis.trim()) || 
+                   (detail.description && detail.description.trim()) || 
+                   (detail.plot && detail.plot.trim()) || 
+                   (detail.story && detail.story.trim()) ||
+                   'Sinopsis belum tersedia untuk anime ini.';
 
   // Render episodes list
   let chapters = state.currentEpisodes || [];
@@ -1223,102 +1268,112 @@ function renderAnimePlayer(streams, currentIndex, animeTitle, chTitle, chapterUr
 
   console.log(`[Player] Rendering stream ${currentIndex + 1}/${streams.length}:`, videoUrl);
 
+  // IMPORTANT: Clear container completely before rendering new player
+  // This prevents "Component already rendered" error from Blogger embeds
+  container.innerHTML = '';
+  
   // Check if URL should be embedded as iframe (blogger.com always needs iframe)
   const isBloggerEmbed = stream.link.includes('blogger.com') || videoUrl.includes('blogger.com');
   const isEmbed = isBloggerEmbed || stream.link.includes('embed') || stream.link.includes('iframe') || (stream.link.includes('pixeldrain') && !stream.link.includes('download'));
 
-  container.innerHTML = `
-    <div class="player-wrapper glass-card">
-      ${isEmbed ?
-      `<iframe src="${videoUrl}" allowfullscreen frameborder="0" allow="autoplay; encrypted-media" style="width:100%;height:100%;border:none;"></iframe>` :
-      `<video id="anime-player" controls autoplay playsinline onerror="handleVideoError()">
-          <source src="${videoUrl}" type="video/mp4">
-          Browser Anda tidak mendukung video HTML5.
-        </video>`
-    }
-    </div>
-    <div class="player-info-card glass-card">
-      <div class="player-main-info">
-        <h2 class="player-title">${animeTitle}</h2>
-        <span class="player-episode-badge">${chTitle} ${stream.reso ? `(${stream.reso})` : ''}</span>
-      </div>
-      <div class="player-meta-info">
-        <small>Server ${currentIndex + 1} dari ${streams.length} • Quality: ${stream.reso}</small>
-      </div>
-      <div class="player-actions">
-         ${streams.length > 1 ? `
-         <button class="btn btn-primary" onclick="switchServer()">
-           🔄 Ganti Server (${currentIndex + 1}/${streams.length})
-         </button>` : ''}
-         <button class="btn btn-secondary" onclick="goBack()">
-           ⬅️ Kembali
-         </button>
-      </div>
-    </div>
-  `;
+  // Create unique iframe ID to prevent re-render issues
+  const iframeId = 'player-iframe-' + Date.now();
 
-  // Initialize HLS.js for .m3u8 files
-  if (!isEmbed) {
-    const video = document.getElementById('anime-player');
-    const isM3U8 = stream.link.includes('.m3u8') || stream.isM3U8;
-
-    if (isM3U8 && Hls.isSupported()) {
-      // Configure HLS.js - proxy rewrites URLs inside M3U8
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: false,
-        backBufferLength: 90
-      });
-      
-      // Use proxied URL - server will rewrite URLs inside M3U8
-      const proxiedM3U8 = `${API_BASE}/proxy/video?url=${encodeURIComponent(stream.link)}`;
-      console.log('[HLS] Loading proxied M3U8:', proxiedM3U8);
-      
-      hls.loadSource(proxiedM3U8);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        console.log('[HLS] Manifest parsed, starting playback');
-        video.play().catch(e => console.log("Auto-play blocked"));
-      });
-
-      hls.on(Hls.Events.ERROR, (event, data) => {
-        console.error('[HLS Error]', data.type, data.details, data);
-        if (data.fatal) {
-          switch (data.type) {
-            case Hls.ErrorTypes.NETWORK_ERROR:
-              console.log('Network error, retrying...');
-              hls.startLoad();
-              break;
-            case Hls.ErrorTypes.MEDIA_ERROR:
-              console.log('Media error, recovering...');
-              hls.recoverMediaError();
-              break;
-            default:
-              console.log('Fatal error, switching server...');
-              window.handleVideoError();
-              break;
-          }
+  // Use setTimeout to ensure DOM is cleared before adding new content
+  setTimeout(() => {
+    container.innerHTML = `
+      <div class="player-wrapper glass-card">
+        ${isEmbed ?
+        `<iframe id="${iframeId}" src="${videoUrl}" allowfullscreen frameborder="0" allow="autoplay; encrypted-media" style="width:100%;height:100%;border:none;" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"></iframe>` :
+        `<video id="anime-player" controls autoplay playsinline onerror="handleVideoError()">
+            <source src="${videoUrl}" type="video/mp4">
+            Browser Anda tidak mendukung video HTML5.
+          </video>`
         }
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari native HLS support
-      video.src = videoUrl;
-      video.play().catch(e => console.log("Auto-play blocked"));
-    }
+      </div>
+      <div class="player-info-card glass-card">
+        <div class="player-main-info">
+          <h2 class="player-title">${animeTitle}</h2>
+          <span class="player-episode-badge">${chTitle} ${stream.reso ? `(${stream.reso})` : ''}</span>
+        </div>
+        <div class="player-meta-info">
+          <small>Server ${currentIndex + 1} dari ${streams.length} • Quality: ${stream.reso || 'Auto'}</small>
+        </div>
+        <div class="player-actions">
+           ${streams.length > 1 ? `
+           <button class="btn btn-primary" onclick="switchServer()">
+             🔄 Ganti Server (${currentIndex + 1}/${streams.length})
+           </button>` : ''}
+           <button class="btn btn-secondary" onclick="goBack()">
+             ⬅️ Kembali
+           </button>
+        </div>
+      </div>
+    `;
 
-    // Auto Next Episode for Anime
-    video.onended = () => {
-      const episodes = state.currentEpisodes || [];
-      const currentEpIdx = episodes.findIndex(ep => (ep.urlId || ep.id) === chapterUrlId);
-      if (currentEpIdx !== -1 && currentEpIdx < episodes.length - 1) {
-        const nextEp = episodes[currentEpIdx + 1];
-        showToast('Memutar episode berikutnya dalam 3 detik...', 'info');
-        setTimeout(() => {
-          playAnimeEpisode(nextEp.urlId || nextEp.id || nextEp.url, `Episode ${nextEp.episode}`, animeTitle);
-        }, 3000);
+    // Initialize HLS.js for .m3u8 files
+    if (!isEmbed) {
+      const video = document.getElementById('anime-player');
+      const isM3U8 = stream.link.includes('.m3u8') || stream.isM3U8;
+
+      if (isM3U8 && Hls.isSupported()) {
+        // Configure HLS.js - proxy rewrites URLs inside M3U8
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          backBufferLength: 90
+        });
+        
+        // Use proxied URL - server will rewrite URLs inside M3U8
+        const proxiedM3U8 = `${API_BASE}/proxy/video?url=${encodeURIComponent(stream.link)}`;
+        console.log('[HLS] Loading proxied M3U8:', proxiedM3U8);
+        
+        hls.loadSource(proxiedM3U8);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          console.log('[HLS] Manifest parsed, starting playback');
+          video.play().catch(e => console.log("Auto-play blocked"));
+        });
+
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          console.error('[HLS Error]', data.type, data.details, data);
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('Network error, retrying...');
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('Media error, recovering...');
+                hls.recoverMediaError();
+                break;
+              default:
+                console.log('Fatal error, switching server...');
+                window.handleVideoError();
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari native HLS support
+        video.src = videoUrl;
+        video.play().catch(e => console.log("Auto-play blocked"));
       }
-    };
-  }
+
+      // Auto Next Episode for Anime
+      video.onended = () => {
+        const episodes = state.currentEpisodes || [];
+        const currentEpIdx = episodes.findIndex(ep => (ep.urlId || ep.id) === chapterUrlId);
+        if (currentEpIdx !== -1 && currentEpIdx < episodes.length - 1) {
+          const nextEp = episodes[currentEpIdx + 1];
+          showToast('Memutar episode berikutnya dalam 3 detik...', 'info');
+          setTimeout(() => {
+            playAnimeEpisode(nextEp.urlId || nextEp.id || nextEp.url, `Episode ${nextEp.episode}`, animeTitle);
+          }, 3000);
+        }
+      };
+    }
+  }, 100); // 100ms delay to allow DOM to clear
 
   // Global functions for this player instance
   window.switchServer = () => {

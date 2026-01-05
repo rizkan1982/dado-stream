@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
+<!-- DADO STREAM v3.2 - Welcome Screen Fix & Video Player Fix - Jan 5 2026 -->
 
 <head>
   <meta charset="UTF-8">
@@ -8,6 +9,9 @@
     content="DADO STREAM - Platform streaming drama China, anime, dan baca komik terlengkap. Nikmati ribuan konten hiburan gratis!">
   <meta name="keywords" content="drama china, anime, komik, streaming, dado stream, dramabox, manga">
   <meta name="author" content="DADO STREAM">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>DADO STREAM - Drama China, Anime & Komik</title>
 
   <!-- PWA Meta Tags -->
@@ -49,6 +53,20 @@
   
   <!-- Adsterra Popunder -->
   <script src="https://pl28403014.effectivegatecpm.com/f2/48/ee/f248ee0218c1012a262b50791ac32e5a.js"></script>
+  
+  <!-- Early check for first visit - hide main content if no focus selected -->
+  <script>
+    (function() {
+      var focus = localStorage.getItem('dado_focus');
+      // If no focus selected, inject CSS to hide main content immediately
+      if (!focus || focus === '') {
+        document.write('<style>#main-content{visibility:hidden !important;}.welcome-screen{display:flex !important;opacity:1 !important;visibility:visible !important;}</style>');
+      } else {
+        // Hide welcome screen if focus exists
+        document.write('<style>.welcome-screen{display:none !important;opacity:0 !important;visibility:hidden !important;}</style>');
+      }
+    })();
+  </script>
 </head>
 
 <body>
