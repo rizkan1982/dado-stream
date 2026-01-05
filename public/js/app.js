@@ -3,7 +3,7 @@
 // ==========================================================================
 
 // Cache version - increment this to invalidate old cache
-const CACHE_VERSION = 'v3.3';
+const CACHE_VERSION = 'v3.4';
 
 // Clear old cache on version change
 (function() {
@@ -970,9 +970,22 @@ async function showAnimeDetail(animeId, pushHistory = true) {
 function renderAnimeDetail(detail) {
   const container = document.getElementById('detail-content');
 
-  const genres = detail.genre || detail.genres || detail.genreList || [];
+  // Safe genres extraction - handle array, string, or object
+  let genresRaw = detail.genre || detail.genres || detail.genreList || [];
+  let genres = [];
+  
+  if (Array.isArray(genresRaw)) {
+    genres = genresRaw;
+  } else if (typeof genresRaw === 'string') {
+    // If it's a comma-separated string
+    genres = genresRaw.split(',').map(g => g.trim()).filter(g => g);
+  } else if (typeof genresRaw === 'object' && genresRaw !== null) {
+    // If it's an object, try to extract values
+    genres = Object.values(genresRaw);
+  }
+  
   const genresHtml = genres.map(genre => {
-    const genreText = typeof genre === 'string' ? genre : (genre.title || genre.name || genre);
+    const genreText = typeof genre === 'string' ? genre : (genre.title || genre.name || String(genre));
     return `<span class="detail-tag">${genreText}</span>`;
   }).join('');
 
@@ -1061,34 +1074,36 @@ async function playAnimeEpisode(chapterUrlId, chTitle, animeTitle) {
 
     console.log('[Anime Player] Response:', response);
 
-    let videoUrl = null;
-    let streams = []; // Declare streams outside the if block
+    let streams = [];
 
+    // Try to get streams from response.data[0].stream
     if (response.data && response.data.length > 0) {
       const streamData = response.data[0].stream || [];
 
-      // Map and prioritize streams
+      // Map and parse streams (handle "link=xxx;reso=yyy" format)
       streams = streamData.map(s => {
         if (typeof s === 'string') {
           const linkMatch = s.match(/link=([^;]+)/);
           const resoMatch = s.match(/reso=([^;]+)/);
           return {
-            link: linkMatch ? linkMatch[1] : '',
-            reso: resoMatch ? resoMatch[1] : ''
+            link: linkMatch ? linkMatch[1] : s, // Use full string if no link= pattern
+            reso: resoMatch ? resoMatch[1] : 'auto'
           };
         }
-        return s;
+        return { link: s.link || s.url || '', reso: s.reso || s.quality || 'auto' };
       }).filter(s => s.link);
-
-      console.log('Available streams:', streams);
-
-      // Prioritize pixeldrain or other reliable hosts
-      const prioritizedStream = streams.find(s => s.link.includes('pixeldrain.com')) ||
-        streams.find(s => s.link.includes('.mp4') || s.link.includes('.m3u8')) ||
-        streams[0];
-
-      videoUrl = prioritizedStream ? prioritizedStream.link : null;
     }
+
+    // Fallback: Use response.sources if available
+    if (streams.length === 0 && response.sources && response.sources.length > 0) {
+      console.log('[Anime Player] Using sources array as fallback');
+      streams = response.sources.map(s => ({
+        link: s.url || s.link || '',
+        reso: s.quality || s.reso || 'auto'
+      })).filter(s => s.link);
+    }
+
+    console.log('Available streams:', streams);
 
     // Check for error response from API
     if (response.error === 'streaming_unavailable' || response.error === 'server_error') {
@@ -1097,7 +1112,7 @@ async function playAnimeEpisode(chapterUrlId, chTitle, animeTitle) {
       return;
     }
 
-    if (!videoUrl || streams.length === 0) {
+    if (streams.length === 0) {
       console.log('[Anime] No streams available. Response:', response);
       showToast('❌ Video anime belum tersedia. Maaf kami masih mengupdate library anime streaming. Silahkan coba episode atau judul anime lain.', 'error');
       goBack();
@@ -1133,10 +1148,13 @@ function renderAnimePlayer(streams, currentIndex, animeTitle, chTitle, chapterUr
 
   // Use setTimeout to ensure DOM is cleared before adding new content
   setTimeout(() => {
+    // For Blogger embeds, don't use sandbox as it blocks the video player scripts
+    const sandboxAttr = isBloggerEmbed ? '' : 'sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"';
+    
     container.innerHTML = `
       <div class="player-wrapper glass-card">
         ${isEmbed ?
-        `<iframe id="${iframeId}" src="${videoUrl}" allowfullscreen frameborder="0" allow="autoplay; encrypted-media" style="width:100%;height:100%;border:none;" sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"></iframe>` :
+        `<iframe id="${iframeId}" src="${videoUrl}" allowfullscreen frameborder="0" allow="autoplay; encrypted-media; fullscreen" style="width:100%;height:100%;border:none;" ${sandboxAttr}></iframe>` :
         `<video id="anime-player" controls autoplay playsinline onerror="handleVideoError()">
             <source src="${videoUrl}" type="video/mp4">
             Browser Anda tidak mendukung video HTML5.
