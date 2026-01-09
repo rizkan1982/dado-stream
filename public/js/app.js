@@ -100,7 +100,10 @@ function getProxyImageUrl(url) {
 
 // Search by star name
 function searchStar(name) {
-  document.getElementById('search-input').value = name;
+  const searchInputDesktop = document.getElementById('search-input-desktop');
+  const searchInputMobile = document.getElementById('search-input-mobile');
+  if (searchInputDesktop) searchInputDesktop.value = name;
+  if (searchInputMobile) searchInputMobile.value = name;
   performSearch();
 }
 
@@ -208,28 +211,45 @@ function initTheme() {
 }
 
 function initEventListeners() {
-  // Search input
-  const searchInput = document.getElementById('search-input');
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      performSearch();
-    }
-  });
+  // Search input - Desktop
+  const searchInputDesktop = document.getElementById('search-input-desktop');
+  if (searchInputDesktop) {
+    searchInputDesktop.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+  }
+
+  // Search input - Mobile
+  const searchInputMobile = document.getElementById('search-input-mobile');
+  if (searchInputMobile) {
+    searchInputMobile.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        performSearch();
+      }
+    });
+  }
 
   // Scroll header effect
   window.addEventListener('scroll', () => {
     const header = document.querySelector('.header');
-    if (window.scrollY > 50) {
-      header.classList.add('scrolled');
-    } else {
-      header.classList.remove('scrolled');
+    if (header) {
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
     }
   });
 
   // Close menu on link click (mobile)
-  document.querySelectorAll('.nav-link').forEach(link => {
+  document.querySelectorAll('.sidebar .menu-item').forEach(link => {
     link.addEventListener('click', () => {
-      closeMenu();
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      if (sidebar) sidebar.classList.remove('active');
+      if (overlay) overlay.classList.remove('active');
     });
   });
 }
@@ -371,11 +391,13 @@ function toggleSearchBar() {
 }
 
 function performMobileSearch() {
-  const input = document.getElementById('mobile-search-input');
+  const input = document.getElementById('mobile-search-input') || document.getElementById('search-input-mobile');
+  if (!input) return;
   const query = input.value.trim();
   
   if (query) {
-    document.getElementById('search-input').value = query;
+    const searchInputDesktop = document.getElementById('search-input-desktop');
+    if (searchInputDesktop) searchInputDesktop.value = query;
     performSearch();
     toggleSearchBar();
     input.value = '';
@@ -1650,8 +1672,9 @@ function renderKomikReader(response, title, chapterId, komikId) {
 // ==========================================================================
 
 async function performSearch() {
-  const searchInput = document.getElementById('search-input');
-  const query = searchInput.value.trim();
+  const searchInputDesktop = document.getElementById('search-input-desktop');
+  const searchInputMobile = document.getElementById('search-input-mobile');
+  const query = (searchInputDesktop?.value || searchInputMobile?.value || '').trim();
 
   if (!query) {
     showToast('Masukkan kata kunci pencarian', 'error');
